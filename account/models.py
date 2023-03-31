@@ -46,7 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    university = models.ForeignKey(University, on_delete=models.PROTECT)
+    university = models.ForeignKey(University, on_delete=models.PROTECT, null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

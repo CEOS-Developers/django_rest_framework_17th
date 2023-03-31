@@ -17,8 +17,14 @@ class University(BaseModel):
     university_id = models.AutoField('primary key', primary_key=True)
     univ_name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.univ_name
+
 
 class Department(BaseModel):
     department_id = models.AutoField('primary key', primary_key=True)
     dept_name = models.CharField(max_length=100)
     university = models.ForeignKey(University, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f'{self.dept_name} : {self.university.univ_name}'
