@@ -9,11 +9,16 @@ class BaseModel(models.Model):
     created_time = models.DateTimeField('created time', auto_now_add=True)
     modified_time = models.DateTimeField('modified time', auto_now=True)
 
+    class Meta:
+        abstract = True  # Set this model as Abstract
+
 
 class University(BaseModel):
+    university_id = models.AutoField('primary key', primary_key=True)
     univ_name = models.CharField(max_length=100)
 
 
 class Department(BaseModel):
+    department_id = models.AutoField('primary key', primary_key=True)
     dept_name = models.CharField(max_length=100)
-    univ = models.ForeignKey(University, on_delete=models.PROTECT)
+    university = models.ForeignKey(University, on_delete=models.PROTECT)

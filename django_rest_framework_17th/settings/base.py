@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
-    'account',
-    'global'
+    'account.apps.AccountConfig',
+    'global_entity.apps.GlobalConfig',
+    'board.apps.BoardConfig'
 ]
 
 MIDDLEWARE = [
