@@ -13,13 +13,10 @@ class BaseModel(models.Model):
 class User(BaseModel, AbstractUser):
     login_id = models.CharField(max_length=255, unique=True)
     univ = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255, null=True)
-    profile_image = models.TextField(null=True)
-    is_superuser = models.BooleanField(default=False)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    profile_image = models.TextField(blank=True, null=True)
     first_name = None
     last_name = None
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -47,9 +44,9 @@ class Post(BaseModel):
     title = models.CharField(max_length=255)
     content = models.CharField(max_length=255)
     like_number = int
-    image1 = models.TextField(null=True)
-    image2 = models.TextField(null=True)
-    image3 = models.TextField(null=True)
+    image1 = models.TextField(blank=True, null=True)
+    image2 = models.TextField(blank=True, null=True)
+    image3 = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.title
