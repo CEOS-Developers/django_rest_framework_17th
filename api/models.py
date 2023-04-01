@@ -108,7 +108,7 @@ class Timetable(BaseTimeModel):
     course = models.ManyToManyField('CourseDetail')
 
     def __str__(self):
-        return self.name
+        return '{}님의 시간표:{}'.format(self.user.nickname, self.name)
 
 
 class Course(BaseTimeModel):
@@ -140,7 +140,8 @@ class CourseDetail(BaseTimeModel):
         (SUN, '일')
     ]
 
-    TIME_CHOICES = [    # 1~15교시 선택
+    # 1~15교시 선택
+    TIME_CHOICES = [
         (1, 1),
         (2, 2),
         (3, 3),
