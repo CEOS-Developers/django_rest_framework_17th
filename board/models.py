@@ -34,13 +34,23 @@ class Post(BaseModel):
 class Message(BaseModel):
     message_id = models.AutoField('primary key', primary_key=True)
 
-    from_user = models.ForeignKey(User, on_delete=models.PROTECT)
-    to_user = models.ForeignKey(User, on_delete=models.PROTECT)
+    from_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='from_user')
+    to_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='to_user')
 
     content = models.CharField(max_length=256)
 
     def __str__(self):
         return f'mesage from {self.from_user.nickname} to {self.to_user.nickname} : {self.content}'
+
+
+class Friendship(BaseModel):
+    friendship_id = models.AutoField('primary key', primary_key=True)
+
+    from_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='friend_one')
+    to_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='friend_two')
+
+    def __str__(self):
+        return f'mesage from {self.from_user.nickname} to {self.to_user.nickname}'
 
 
 class Comment(BaseModel):

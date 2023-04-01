@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'api',
     'account.apps.AccountConfig',
     'global_entity.apps.GlobalConfig',
-    'board.apps.BoardConfig'
+    'board.apps.BoardConfig',
+    'timetable.apps.TimetableConfig'
 ]
 
 MIDDLEWARE = [
