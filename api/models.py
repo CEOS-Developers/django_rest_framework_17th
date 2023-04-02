@@ -123,7 +123,7 @@ class Lecture(BaseModel):
 
 
 class TakeLecture(BaseModel):
-    profile = models.ForeignKey("Profile", on_delete=models.CASCADE)
+    timeTable = models.ForeignKey("TimeTable", on_delete=models.CASCADE, default='')
     lecture = models.ForeignKey("Lecture", on_delete=models.CASCADE)
 
     def __str__(self):
