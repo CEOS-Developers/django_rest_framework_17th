@@ -13,14 +13,11 @@ class BaseModel(models.Model):
 
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nickname = models.CharField(max_length=60)
-    email = models.EmailField(max_length=60)
-    password = models.CharField(max_length=200)
     profileImgPath = models.TextField(null=True)
     friends = models.ManyToManyField('self', blank=True)
 
     def __str__(self):
-        return self.nickname
+        return self.user.username
 
 
 class School(BaseModel):
