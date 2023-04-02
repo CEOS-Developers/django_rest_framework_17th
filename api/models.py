@@ -94,6 +94,7 @@ class Scrap(BaseModel):
 class TimeTable(BaseModel):
     profile = models.ForeignKey("Profile", on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
+    lecture = models.ManyToManyField("Lecture", through="TakeLecture")
 
     def __str__(self):
         return self.name
