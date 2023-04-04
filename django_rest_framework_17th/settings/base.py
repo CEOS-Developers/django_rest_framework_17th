@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +44,8 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'global_entity.apps.GlobalConfig',
     'board.apps.BoardConfig',
-    'timetable.apps.TimetableConfig'
+    'timetable.apps.TimetableConfig',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [

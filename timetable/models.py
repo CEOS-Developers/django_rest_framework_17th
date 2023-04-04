@@ -9,8 +9,8 @@ class Subject(BaseModel):
     subject_id = models.AutoField('primary key', primary_key=True)
 
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
-    subject_name = models.CharField(max_length=512)
-    subject_code = models.CharField(max_length=512)
+    subject_name = models.CharField(max_length=200)
+    subject_code = models.CharField(max_length=200)
     subject_grade = models.IntegerField()
 
     def __str__(self):
@@ -23,10 +23,10 @@ class Lecture(BaseModel):
     subject = models.ForeignKey(Subject, on_delete=models.PROTECT)
     listener = models.ForeignKey(User, on_delete=models.PROTECT)
 
-    semester = models.CharField(max_length=512)
-    classroom = models.CharField(max_length=512)
-    professor_name = models.CharField(max_length=512)
-    lecture_time = models.CharField(max_length=512)
+    semester = models.CharField(max_length=200)
+    classroom = models.CharField(max_length=200)
+    professor_name = models.CharField(max_length=200)
+    lecture_time = models.CharField(max_length=200)
 
     score = models.FloatField()
 
