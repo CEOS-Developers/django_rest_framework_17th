@@ -30,10 +30,10 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
+    'account.apps.AccountConfig',
+    'global_entity.apps.GlobalConfig',
+    'board.apps.BoardConfig',
+    'timetable.apps.TimetableConfig',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +78,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_rest_framework_17th.wsgi.application'
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
@@ -92,7 +96,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -106,7 +109,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
@@ -116,3 +118,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# 유저를 추가하기 위한 코드
+AUTH_USER_MODEL = 'account.User'
