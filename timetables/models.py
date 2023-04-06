@@ -1,6 +1,6 @@
 from django.db import models
 
-from accounts.models import Profile
+from accounts.models import User
 from bases.models import BaseTimeModel
 
 
@@ -8,7 +8,7 @@ from bases.models import BaseTimeModel
 
 
 class Timetable(BaseTimeModel):
-    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='timetables')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='timetables')
     name = models.CharField(max_length=10)
     course = models.ManyToManyField('CourseDetail')
 
@@ -69,10 +69,10 @@ class CourseDetail(BaseTimeModel):
 
 
 class Friend(BaseTimeModel):
-    from_user_id = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friend')
-    to_user_id = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friend_list')
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friend')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friend_list')
     is_accepted = models.BooleanField(default=False)
 
     def __str__(self):
-        return 'from user: {}, to user: {}'.format(self.from_user_id.user.username, self.to_user_id.user.username)
+        return 'from user: {}, to user: {}'.format(self.from_user.username, self.to_user.username)
 

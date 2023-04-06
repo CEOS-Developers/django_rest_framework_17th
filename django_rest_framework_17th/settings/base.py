@@ -41,6 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
+    'bases',
+    'accounts',
+    'boards',
+    'timetables'
 ]
 
 MIDDLEWARE = [
@@ -116,3 +120,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# user model
+AUTH_USER_MODEL = 'accounts.User'
