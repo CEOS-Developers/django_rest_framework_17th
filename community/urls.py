@@ -1,7 +1,17 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path('', views.PostList.as_view()),
-    path('<int:pk>/', views.PostDetail.as_view())
-]
+from . import views
+from .views import *
+
+router = DefaultRouter()
+
+router.register('post', PostViewSet)
+
+app_name = 'community'
+# urlpatterns = [
+#     path('post/', views.PostList.as_view()),
+#     path('post/<int:pk>/', views.PostDetail.as_view())
+# ]
+
+urlpatterns = router.urls
