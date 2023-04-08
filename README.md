@@ -70,6 +70,9 @@ user 와 course 를 ForeignKey로 연결하여 timetable 객체 4개 생성
 <br></br>
 
 ## [3주차 미션] API 만들기
+### 0. DRF(Django REST Framework) 사용하기
+- **pip install djangorestframework** 를 통해 DRF 설치하기
+- **settings.py**의 **INSTALLED_APPS**에 **rest_framework** 추가하기
 
 ### 1. CBV 로 API 만들기
 - **모든 데이터를 가져오기**
@@ -179,10 +182,10 @@ user 와 course 를 ForeignKey로 연결하여 timetable 객체 4개 생성
 
 <img width="1006" alt="스크린샷 2023-04-08 오후 7 47 14" src="https://user-images.githubusercontent.com/98458302/230726784-1a47e67c-9b08-429e-813e-4344762418c8.png">
 
-### 1. Viewset으로 리팩토링하기
+### 2. Viewset으로 리팩토링하기
 - 기존의 CBV 형태로 작성한 코드를 모두 주석으로 처리해주고 Viewset 형식으로 바꿔준다.
 
-####community/urls.py
+#### community/urls.py
 
 <pre><code>
 from rest_framework.routers import DefaultRouter
@@ -195,7 +198,7 @@ router.register('post', PostViewSet)
 urlpatterns = router.urls
 </code></pre>
 
-####community/views.py
+#### community/views.py
 
 <pre><code>
 from rest_framework import viewsets
@@ -211,4 +214,60 @@ class PostViewSet(viewsets.ModelViewSet):
 - 또한 Router에서 제공하는 router.register( ) 기능을 통해 경로와 특정 Viewset을 매핑시켜줌으로써
 - API 접근시 **Http Method**와 경로 마지막의 **<int:pk>/** 유무를 통해 특정 Viewset에서의 요청을 알아서 처리해준다.
 
+### 3. Filter 기능 구현하기
+#### Setting
+- **pip install django-filter** 명령어를 통해 django-filter를 설치하기
+- **settings.py**의 **INSTALLED_APPS**에 **django-filter** 추가하기
+- 물론 filter를 직접적으로 사용하여 해당 Viewset에서 filtering 기능을 이용할 수 있겠지만
+- 파일 이름에 따라 가독성을 주기위해 views.py에는 뷰만이 존재해야한다고 판단하여 filter.py 파일을 생성하여 필터들을 분리해주었다.
 
+#### community/filters.py
+
+<pre><code>
+from django_filters.rest_framework import FilterSet, filters
+from .models import *
+
+class PostFilter(FilterSet):
+
+    title = filters.CharFilter(lookup_expr='icontains', field_name='title')
+    user = filters.NumberFilter(field_name='user_id')
+    board = filters.NumberFilter(field_name='board_id')
+
+    class Meta:
+        model = Post
+        fields = ['title', 'user', 'board']
+	
+</code></pre>
+- 뷰에 연결하고자 하는 Filter를 설정하는 단계이다.
+- 게시글의 경우 제목을 통한 검색이 이루어지는데 검색어가 포함되어 있는 게시글을 모두 출력해야하기에
+- 필터링 설정에서 **lookup_expr** 을 **icontains** 로 설정해줌으로써 대소문자 구분없이 검색어가 포함된 모든 게시글이 출력되게 하였다.
+- (혹시 대소문자를 구분하며 정확한 문자열의 비교를 원한다면 해당 설정을 **exact**로 바꿔주면 된다.)
+- 필터에 설정된 Meta class 에서는 어느 모델을 이용할 것이고 해당 모델의 어떤 필드값으로 필터링을 할 것인지 명시해준다.
+
+#### community/views.py
+
+<pre><code>
+...
+
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PostFilter
+</code></pre>
+- 해당 뷰에서 어떤 필터를 사용할 것인지 명시해준다.
+
+#### TEST
+<img width="1024" alt="스크린샷 2023-04-08 오후 10 49 57" src="https://user-images.githubusercontent.com/98458302/230729442-545c5940-687e-4f4d-b60d-d88fca267bdf.png">
+<img width="1024" alt="스크린샷 2023-04-08 오후 10 54 11" src="https://user-images.githubusercontent.com/98458302/230729446-1119b983-3f92-491c-9c45-b70177b9466f.png">
+
+
+### 4. 회고
+- 확실히 Django에는 편리한 기능이 너무나도 많은 것 같다.
+- Viewset과 같이 기본적으로 제공해주는 것들이 정말 많아서 개발자 입장에서 구현하는 시간이 확실히 단축될 것 같다.
+- 다만 세부적인 커스터마이징이 필요할 경우 해당 기능들을 제공해주는 라이브러리의 내부 구조에 대한 확실한 이해가 필요할 것 같다.
+- 이번 과제의 경우 뷰를 만들고 해당 뷰에서의 요청 처리와 데이터 반환에 관한 복잡하지 않은 내용이었기에
+- 별다른 오류없이 수월하게 진행되어 열 받을 일이 없어 다행이었다.
+- 이번 미션을 수행하며 장고의 동작 방식에 대한 이해에 굉장히 도움이 된 것 같고 재미있었다.
+- 이제 시험공부 열심히 하다가 또 돌아와야지
+- 모두들 시험 잘보고 다시 만납시다. 화이팅~
