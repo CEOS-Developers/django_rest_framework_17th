@@ -46,7 +46,7 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comments.count() + reply_count
 
 
-class PostsSerializer(serializers.ModelSerializer):
+class PostListSerializer(serializers.ModelSerializer):
     user_nickname = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
 
@@ -69,7 +69,7 @@ class PostsSerializer(serializers.ModelSerializer):
     # 시간 돌려주는 함수를 짰으면 좋겠땅...
 
 
-class BoardSerializer(serializers.ModelSerializer):
+class BoardListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ['name', 'description']
