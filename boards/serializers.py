@@ -7,7 +7,7 @@ class CommentReplySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CommentReply
-        fields = ['user', 'user_nickname', 'content', 'like_number']
+        fields = ['user', 'user_nickname', 'content', 'like_number', 'created_at']
 
     def get_user_nickname(self, obj):
         return obj.user.nickname
@@ -19,7 +19,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['user', 'user_nickname', 'content', 'like_number', 'comment_replies']
+        fields = ['user', 'user_nickname', 'content', 'like_number', 'comment_replies', 'created_at']
 
     def get_user_nickname(self, obj):
         return obj.user.nickname
