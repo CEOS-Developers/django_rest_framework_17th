@@ -41,6 +41,17 @@ class TimetableList(APIView):
         return Response(serializer.errors, status=400)
 
 
+class CourseDetailView(APIView):
+    def get(self, request, format=None):
+        # 강의명과 교수명으로 검색할 수 있다고 가정하였다
+        if request.data.get('title') is not None:
+            course_list = CourseDetail.objects.filter(course__title__contains=request.data.get('title'))
+        else:
+            course_list = CourseDetail.objects.filter(course__professor__contains=request.data.get('professor'))
+        serializer = CourseDetailSerializer(course_list, many=True)
+        return Response(serializer.data, status=200)
+
+
 
 
 
