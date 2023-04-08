@@ -24,6 +24,12 @@ class TimetableSerializer(serializers.ModelSerializer):
         fields = ['name', 'courses']
 
 
+class TimetableListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Timetable
+        fields = ['id', 'name', 'is_default']
+
+
 class FriendSerializer(serializers.ModelSerializer):
     friend_name = serializers.SerializerMethodField()
 

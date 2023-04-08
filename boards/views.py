@@ -18,10 +18,10 @@ class PostList(APIView):
 		serializer = PostListSerializer(post_list, many=True)
 		return Response(serializer.data, status=200)
 
-	def post(self, request, format=None):
+	def post(self, request, board_id, format=None):
 		serializer = PostSerializer(data=request.data)
 		if serializer.is_valid():
-			serializer.save()
+			serializer.save(board_id=board_id)
 			return Response(status=201)
 		return Response(serializer.errors, status=400)
 
@@ -30,7 +30,6 @@ class PostDetail(APIView):
 	def get_object(self, post_id):
 		try:
 			return Post.objects.get(id=post_id)
-
 		except Post.DoesNotExist:
 			raise Http404("존재하지 않는 게시글입니다.")
 
