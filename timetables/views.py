@@ -1,8 +1,33 @@
 from django.http import Http404
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .serializers import *
-from rest_framework.views import APIView
+
+
+# class TimetableViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_fields = ['user_id']
+
+#
+#
+# class CourseFilter(FilterSet):
+#     title = filters.CharFilter(method='filter_is_title')
+#     professor = filters.CharFilter(field_name='professor')
+#
+#     class Meta:
+#         model = CourseDetail
+#         fields = ['title', 'professor']
+#
+#     def filter_is_title(self, queryset, name, value):
+#         return queryset.filter(title=value)
+
+
+# class CourseViewSet(viewsets.ModelViewSet):
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_fields = ['title', 'professor']
 
 
 class TimetableDetail(APIView):
@@ -50,12 +75,3 @@ class CourseDetailView(APIView):
             course_list = CourseDetail.objects.filter(course__professor__contains=request.data.get('professor'))
         serializer = CourseDetailSerializer(course_list, many=True)
         return Response(serializer.data, status=200)
-
-
-
-
-
-
-
-
-
