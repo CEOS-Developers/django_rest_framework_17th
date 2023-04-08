@@ -89,7 +89,7 @@ create_user 함수와 create_superuser함수를 구현해서 일반 유저 생�
 
 이후에는 자신이 원하는 필드를 추가하면 완성!
 
-마지막으로 manage.py에서 
+마지막으로 manage.py에서
 AUTH_USER_MODEL 를 설정하고 자신의 user class의 위치를 가리키면 앱에서 돌아갈 준비가 완료된 것이다.
 
 ### 기타
@@ -129,8 +129,46 @@ CREATE DATABASE (데이터베이스 이름)
 * 이번에 기능을 완성할 때 마다 readme를 작성하지 않아서 문제가 생긴 부분이 어디인지 잘 기억이 나지 않았다.
 * 다음에는 기록 잘하자!
 
-## 임시저장
+## step CBV
 
+![사진](./image/results.png)
+
+이와 같이 모든 정보를 가져오는 api 를 구현하였다.
+
+또한 모든 정보를 가져오는 url 이외에도 pk를 통해서 특정 정보를 가져오는 api, 특정 정보를 삭제하는 api, 특정 정보를 수정하는 api를 구현하였다.
+
+~~~python
+urlpatterns = [
+    path('', views.AllBoardView.as_view(), name='all_board'),
+    path('<int:pk>/', views.OneBoardView.as_view(), name='index'),
+    # path('<int:pk>/', views.DetailView.as_view(), name='detail'),
+    # path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),
+    # path('<int:question_id>/vote/', views.vote, name='vote'),
+]
+~~~
+
+## step ViewSet
+
+![사진](./image/fail.png)
+
+그러나 viewSet으로 수정했을 때는 끝내 실패했다.
+왜 이런지는 모르겠지만, 다른 사람들의 실습을 보면서 참고를 할 예정이다.
+
+추정되는 이유로는
+
+~~~python
+filter_backends = [DjangoFilterBackend]
+filterset_class = BoardFilter
+~~~
+를 설정했는데 여기에서 BoardFilter 클래스로 정상적으로 입력이 가지 않는 것이 원인인것 같다.
+
+## 알게 된 점
 
 * 장고 adminpage에서 유저 정보를 저장할 때는 password encrypt가 발생하지 않는다.
-* 
+* as_view 메서드는 해당 클래스가 모든 것을 알아서 하게 놔둔다는 의미를 지닌다.
+* ModelViewSet 은 ixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin,
+  mixins.ListModelMixin, GenericViewSet 를 상속한다. 이상적인 것은 get, post, put 연산에 따라서 상속을 받는 방법이 제일 이상적이다.
+* delete 연산을 할 때는 perform_destroy 메서드를 오버라이딩해서 delete 연산을 커스터마이징이 가능하다.
+* filterset_class는 filter를 해주는 class이고, filterset_fields는 filter를 해주는 field이다. 후자가 훨씬 구현에서는 이득을 가진다.
+* filter는 주로 문자 이외에 모든 것을 다루고, search는 주로 문자를 다룬다.
+* viewSet은 미스터리인거 같다.

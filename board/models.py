@@ -9,11 +9,11 @@ class Board(BaseModel):
     board_id = models.AutoField('primary key', primary_key=True)
 
     university = models.ForeignKey(University, on_delete=models.PROTECT)
-    board_name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.university.univ_name} : {self.board_name}'
+        return f'{self.university.univ_name} : {self.name}'
 
 
 class Post(BaseModel):
