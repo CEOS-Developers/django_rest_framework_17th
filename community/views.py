@@ -2,7 +2,10 @@ from django.shortcuts import render
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from .filters import PostFilter
 from .serializers import *
+from django_filters.rest_framework import filters, DjangoFilterBackend, FilterSet
 from django.http import Http404
 
 
@@ -72,6 +75,9 @@ from django.http import Http404
 #         post.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PostFilter

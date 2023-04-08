@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'community',
     'timetable',
     'rest_framework',
+    'django_filters',
 ]
 
 REST_FRAMEWORK = {
