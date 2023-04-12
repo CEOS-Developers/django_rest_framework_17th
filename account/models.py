@@ -7,6 +7,7 @@ class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_img_path = models.URLField(blank=True)
     friends = models.ManyToManyField('self', blank=True)
+    school = models.ForeignKey("School", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.user.username

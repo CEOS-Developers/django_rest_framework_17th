@@ -1,9 +1,10 @@
 from django.db import models
 from utils.models import BaseModel
+from account.models import *
 
 
 class TimeTable(BaseModel):
-    profile = models.ForeignKey("Profile", on_delete=models.CASCADE)
+    profile = models.ForeignKey("account.Profile", on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
     lecture = models.ManyToManyField("Lecture", through="TakeLecture")
 
@@ -44,7 +45,7 @@ class TakeLecture(BaseModel):
 
 class LectureReview(BaseModel):
     lecture = models.ForeignKey("Lecture", on_delete=models.CASCADE)
-    profile = models.ForeignKey("Profile", on_delete=models.CASCADE)
+    profile = models.ForeignKey("account.Profile", on_delete=models.CASCADE)
     rating = models.CharField(max_length=10)
     contents = models.CharField(max_length=200)
 
@@ -54,7 +55,7 @@ class LectureReview(BaseModel):
 
 class ReviewLike(BaseModel):
     lectureReview = models.ForeignKey("LectureReview", on_delete=models.CASCADE)
-    profile = models.ForeignKey("Profile", related_name="profiles", on_delete=models.CASCADE)
+    profile = models.ForeignKey("account.Profile", related_name="profiles", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.profile} 's like on {self.lectureReview}"

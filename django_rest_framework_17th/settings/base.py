@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'account',
     'community',
     'timetable',
-    'utils'
+    'utils',
 ]
 
 MIDDLEWARE = [
