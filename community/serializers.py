@@ -3,11 +3,9 @@ from community.models import *
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    school = serializers.StringRelatedField()
-
     class Meta:
         model = Board
-        fields = ['name', 'school']
+        fields = ['id', 'name']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -16,7 +14,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'post', 'profile', 'profile_username', 'profile_profile_img_path', 'parent', 'contents',
+        fields = ['id', 'profile', 'profile_username', 'profile_profile_img_path', 'parent', 'contents', 'status',
                   'created_at']
 
     def get_profile_username(self, obj):
@@ -34,7 +32,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'profile', 'profile_username', 'profile_profile_img_path', 'title', 'contents', 'is_anonymous',
-                  'is_question', 'created_at', 'updated_at', 'comment_set']
+                  'is_question', 'status', 'created_at', 'updated_at', 'comment_set']
 
     def get_profile_username(self, obj):
         return obj.profile.user.username
@@ -50,7 +48,13 @@ class PostListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'profile', 'profile_username', 'profile_profile_img_path', 'title', 'contents', 'is_anonymous',
-                  'is_question', 'created_at', 'updated_at']
+                  'is_question', 'status', 'created_at', 'updated_at']
+
+    def get_profile_username(self, obj):
+        return obj.profile.user.username
+
+    def get_profile_profile_img_path(self, obj):
+        return obj.profile.profile_img_path
 
 
 class PhotoSerializer(serializers.ModelSerializer):

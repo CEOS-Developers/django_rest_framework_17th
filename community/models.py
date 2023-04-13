@@ -35,7 +35,7 @@ class Photo(BaseModel):
 class Comment(BaseModel):
     post = models.ForeignKey("Post", on_delete=models.CASCADE)
     profile = models.ForeignKey("account.Profile", on_delete=models.CASCADE)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, default=0)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
     contents = models.CharField(max_length=200)
 
     def __str__(self):

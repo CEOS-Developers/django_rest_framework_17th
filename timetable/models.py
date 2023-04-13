@@ -14,7 +14,7 @@ class TimeTable(BaseModel):
 
 class LectureDomain(BaseModel):
     name = models.CharField(max_length=60)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, default=0)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.name
