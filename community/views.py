@@ -6,6 +6,8 @@ from .serializers import *
 from .models import *
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import *
 
 
 # class BoardList(APIView):
@@ -56,3 +58,5 @@ class BoardViewSet(viewsets.ModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PostFilter

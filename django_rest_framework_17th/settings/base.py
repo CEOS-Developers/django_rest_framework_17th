@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'community',
     'timetable',
     'utils',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
