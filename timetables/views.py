@@ -1,3 +1,5 @@
+import logging
+
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from rest_framework import viewsets, mixins
@@ -30,6 +32,11 @@ from .serializers import *
 #     filterset_fields = ['title', 'professor']
 
 
+# log 사용
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 class TimetableDetail(APIView):
     def get_object(self, timetable_id):
         try:
@@ -42,7 +49,6 @@ class TimetableDetail(APIView):
         timetable_serializer = TimetableSerializer(timetable)
         friends = Friend.objects.filter(from_user__id=timetable.user.id)
         friends_serializer = FriendSerializer(friends, many=True)
-        print(friends_serializer.data)
         serializers = [timetable_serializer.data, friends_serializer.data]
         return Response(serializers, status=200)
 
@@ -61,8 +67,9 @@ class TimetableList(APIView):
     def post(self, request, format=None):
         serializer = TimetableSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(status=201)
+            user = User.objects.get(nickname=request.data.get('nickname'))
+            serializer.save(user=user)
+            return self.get(request)
         return Response(serializer.errors, status=400)
 
 

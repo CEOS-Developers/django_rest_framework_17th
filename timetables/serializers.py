@@ -17,7 +17,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
 
 class TimetableSerializer(serializers.ModelSerializer):
-    courses = CourseDetailSerializer(many=True)
+    courses = CourseDetailSerializer(many=True, read_only=True)
 
     class Meta:
         model = Timetable

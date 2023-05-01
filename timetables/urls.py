@@ -5,7 +5,7 @@ from . import views
 # router = routers.DefaultRouter()
 # router.register('', TimetableViewSet)
 # router.register('courses', CourseViewSet)
-
+#
 # urlpatterns = router.urls
 
 urlpatterns = [

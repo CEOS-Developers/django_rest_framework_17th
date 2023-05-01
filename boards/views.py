@@ -1,7 +1,20 @@
 from rest_framework import viewsets
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 
 from .serializers import *
+
+
+class BoardFilter(FilterSet):
+    name = filters.NumberFilter(field_name='school_id')
+
+    class Meta:
+        model = Board
+        fields = ['school_id']
+
+    # def filter_board(self, queryset, name, value):
+    #     filtered_queryset = queryset.filter(school_id=)
+    #
+    #     return filtered_queryset
 
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -9,7 +22,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     serializer_class = BoardListSerializer
 
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['school_id']
+    filterset_fields = BoardFilter
 
 
 class PostViewSet(viewsets.ModelViewSet):
