@@ -9,12 +9,7 @@ class BoardFilter(FilterSet):
 
     class Meta:
         model = Board
-        fields = ['school_id']
-
-    # def filter_board(self, queryset, name, value):
-    #     filtered_queryset = queryset.filter(school_id=)
-    #
-    #     return filtered_queryset
+        fields = ['school']
 
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -22,7 +17,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     serializer_class = BoardListSerializer
 
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = BoardFilter
+    filterset_class = BoardFilter
 
 
 class PostViewSet(viewsets.ModelViewSet):
