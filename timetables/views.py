@@ -60,15 +60,14 @@ class TimetableDetail(APIView):
 
 class TimetableList(APIView):
     def get(self, request, format=None):
-        timetable_list = Timetable.objects.filter(user__nickname=request.data.get('nickname'))
+        timetable_list = Timetable.objects.filter(user__id=request.data.get('user'))
         serializer = TimetableListSerializer(timetable_list, many=True)
         return Response(serializer.data, status=200)
 
     def post(self, request, format=None):
         serializer = TimetableSerializer(data=request.data)
         if serializer.is_valid():
-            user = User.objects.get(nickname=request.data.get('nickname'))
-            serializer.save(user=user)
+            serializer.save()
             return self.get(request)
         return Response(serializer.errors, status=400)
 
