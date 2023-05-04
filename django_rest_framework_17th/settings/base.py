@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'board',
     'timetable',
     'account',
+    'rest_framework',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
