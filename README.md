@@ -291,3 +291,36 @@ class PostViewSet(viewsets.ModelViewSet):
 -> HTTPS 프로토콜 사용과 세션에 만료 시간을 넣어주는 것으로써 해결.
 - 세션 저장소를 사용하기 때문에 추가적인 저장공간이 필요하다.
 
+#### 1.2 Json Web Token을 이용한 인증
+- 사용자를 인증하고 식별하기 위한 정보들을 암호화시킨 토큰을 통해 사용자의 인증, 인가를 진행하는 방식이다.
+- **Token** = Header + Payload + Verify Signature
+- **Header**
+-> 토큰의 타입(**typ**)과 암호화할 방식(**alg**)을 설정
+- **Payload**
+-> 토큰에 담을 정보를 포함
+-> 보통 만료 일시, 발급 일시, 발급자, 권한정보 등을 포함
+-> 클레임(정보의 일부)의 종류로는 Registered, Public, Private로 3가지가 존재
+- **Verify Signature**
+-> Payload가 위변조되지 않았다는 사실을 증명하는 문자열(JSON의 변조를 체크)
+-> Base64 방식으로 인코딩한 Header, Payload 그리고 SECRET KEY로 더한 후 Header에서 설정한 암호화 함수로 암호화한 서명값
+
+- 사용자의 로그인 요청을 통해 서버는 계정 정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 Payload에 정보를 넣어 Token을 생성한다.
+- 생성된 Access Token을 HTTP 응답 헤더에 실어 사용자에게 보냄으로써 사용자는 인증이 필요한 요청마다 토큰을 HTTP 요청 헤더에 실어 보내고
+- 서버에서는 해당 토큰의 Verify Signature를 SECRET KEY로 복호화한 후, 조작 여부, 유효 기간을 확인하고 Payload를 복호화하여 사용자에 맞는 데이터를 응답해준다.
+
+#### 장점
+- JWT는 발급 후 검증만 거치면 되기 때문에 추가적인 저장공간이 필요없다.
+- 확장성이 뛰어나다.(토큰 기반으로 하는 다른 인증 시스템에 접근이 가능)
+
+#### 단점
+- 한 번 발급되면 유효기간이 완료될 때까지는 계속 사용이 가능하며 중간에 삭제가 불가능하다.
+- 따라서 해커에 의해 정보가 노출된다면 대처할 방법이 필요하다.
+-> Access Token의 만료 시간을 짧게 잡고 Access Token의 재발급을 요청하는 Refresh Token을 추가적으로 발급하여 해결.
+- Payload 정보가 디코딩하면 누구나 접근할 수 있기에 중요한 정보들을 보관할 수 없다.
+- JWT의 길이가 길기 때문에, 인증 요청이 많아지면 서버의 자원낭비가 발생한다.
+
+#### 1.3 OAuth 2.0 을 이용한 인증
+- 별도의 회원가입 없이 외부 서비스에서도 인증을 가능하게 하고 해당 서비스의 API를 이용하게 해주는 프로토콜
+- Resource Owner(사용자)가 Client(웹 어플리케이션)에게 인증 요청을 하게되면
+- Client는 Authorization Request(인증 요청)를 통해 Authorization Server(인증 서버)에게 로그인 페이지를 요청하고 Resource Owner에게 보내준다.
+- Resource Owner가 인증을 완료하면 Authorization code가 발급되고 url에 실어 Client에게 보냅니다.
