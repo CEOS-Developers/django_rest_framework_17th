@@ -1,15 +1,16 @@
 from django.urls import path, include
+from rest_framework import routers
 
-from . import views
+from .views import *
 
-# router = routers.DefaultRouter()
-# router.register('', TimetableViewSet)
-# router.register('courses', CourseViewSet)
-#
-# urlpatterns = router.urls
+router = routers.DefaultRouter()
+router.register('timetables', TimetableViewSet)
+router.register('courses', CourseViewSet)
+
+urlpatterns = router.urls
 
 urlpatterns = [
-    path('', views.TimetableList.as_view()),
-    path('<int:timetable_id>', views.TimetableDetail.as_view()),
-    path('courses/', views.CourseDetailView.as_view()),
+    path('', include(urlpatterns)),
+    # path('<int:timetable_id>', views.TimetableDetail.as_view()),
+    # path('courses/', views.CourseDetailView.as_view()),
 ]

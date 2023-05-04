@@ -5,7 +5,7 @@ from .serializers import *
 
 
 class BoardFilter(FilterSet):
-    name = filters.NumberFilter(field_name='school_id')
+    school = filters.NumberFilter(field_name='school_id')
 
     class Meta:
         model = Board
@@ -20,9 +20,21 @@ class BoardViewSet(viewsets.ModelViewSet):
     filterset_class = BoardFilter
 
 
+class PostFilter(FilterSet):
+    title = filters.CharFilter(lookup_expr='icontains', field_name='title')
+    board = filters.NumberFilter(field_name='board_id')
+
+    class Meta:
+        Model = Post
+        fields = ['title', 'board']
+
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PostFilter
 
 
 # class BoardList(APIView):

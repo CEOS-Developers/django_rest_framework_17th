@@ -4,8 +4,9 @@ from rest_framework import routers
 from .views import *
 
 router = routers.DefaultRouter()
-router.register('boards', BoardViewSet)   # register()함으로써 두 개의 url 생성
-router.register('posts', PostViewSet)
+router.register('boards', BoardViewSet, basename=Board)   # register()함으로써 두 개의 url 생성
+router.register('posts', PostViewSet, basename=Post)
+
 
 urlpatterns = router.urls
 
