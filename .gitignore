@@ -174,4 +174,7 @@ cython_debug/
 # MAC
 .DS_store
 
+#shell
+shell_commands.md
+
 # End of https://www.toptal.com/developers/gitignore/api/django
