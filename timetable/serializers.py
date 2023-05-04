@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from .models import *
-from global_entity.models import *
+from global_entity.serializers import *
+from account.serializers import *
 
 
 class SubjectSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    department = Department()
+    department = DepartmentSerializer()
 
     class Meta:
         model = Subject  # product 모델 사용
@@ -16,8 +17,8 @@ class SubjectSerializer(serializers.ModelSerializer):
 class LectureSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    subject = Subject()
-    listener = User()
+    subject = SubjectSerializer()
+    listener = UserSerializer()
 
     class Meta:
         model = Lecture  # product 모델 사용
