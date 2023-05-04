@@ -27,7 +27,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 #DEBUG = env('DEBUG')
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
@@ -46,7 +46,15 @@ INSTALLED_APPS = [
     'comments',
     'timetables',
     'tag',
+    'rest_framework',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES' : (
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
