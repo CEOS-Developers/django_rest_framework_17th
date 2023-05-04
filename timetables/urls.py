@@ -1,16 +1,20 @@
-from django.urls import path
+from django.urls import path,include
 from .views import *
+from rest_framework.routers import DefaultRouter
 
 
 app_name = 'timetables'
+router = DefaultRouter()
+
+router.register('timetable', TimetableViewSet) #comment list볼러면 설정해줘야함..
+
+router.register('subject', SubjectViewSet)
 urlpatterns = [
-    path('home/', home, name='home'),
-    path('detail/<int:timetable_id>', detail, name='detail'),
-    path('new/', new, name='new'),
-    path('create/', create, name='create'),
+    # path('', TimetableList.as_view()),
+    # path('<int:timetable_id>/', TimetableDetail.as_view()),
+    # path('subject/', SubjectList.as_view()),
+    # path('subject/<int:subject_id>/', SubjectDetail.as_view()),
 
-
-    path('new_subject.html/<int:timetable_id>/', new_subject, name='new_subject'),
-    path('create_subject/<int:timetable_id>/', create_subject, name='create_subject'),
+    path('', include(router.urls)),
 
 ]
