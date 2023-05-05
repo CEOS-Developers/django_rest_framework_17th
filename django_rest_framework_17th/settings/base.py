@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+
+os.environ.get("DJANGO_SETTINGS_MODULE")
+
 from datetime import timedelta
 
 import environ

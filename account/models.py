@@ -1,6 +1,6 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 
 
 # Create your models here.
@@ -20,6 +20,8 @@ class User(BaseModel, AbstractBaseUser):
     email = models.EmailField(max_length=30, unique=True, null=False, blank=False)
     profile_image = models.URLField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'login_id'
 
