@@ -1,6 +1,53 @@
 from django.db import models
 from django.contrib.auth.models import User
 from utils.models import BaseModel
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+
+
+class MyUserManager(BaseUserManager):
+    def create_user(self, email, nickname, school_id, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Users must have an email address")
+
+        user = self.model(
+            email=self.normalize_email(email),
+            nickname=nickname,
+            school_id=school_id,
+        )
+
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nickname, password=None, **extra_fields):
+        superuser = self.create_user(
+            email,
+            nickname=nickname,
+        )
+        superuser.is_admin = True
+        superuser.save(using=self._db)
+        return superuser
+
+
+class MyUser(AbstractBaseUser):
+    email = models.EmailField(max_length=255, unique=True)
+    nickname = models.CharField(max_length=100, unique=True)
+    # password, last_login 은 기본 제공
+    profile_img_path = models.URLField(blank=True, null=True)
+    friends = models.ManyToManyField('self', blank=True, null=True)
+    school = models.ForeignKey("School", on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = MyUserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["nickname", "school_id"]
+
+    def __str__(self):
+        return self.email
 
 
 class Profile(BaseModel):
