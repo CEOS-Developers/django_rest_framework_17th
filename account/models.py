@@ -1,3 +1,4 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -12,12 +13,15 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class User(BaseModel, AbstractUser):
-    login_id = models.CharField(max_length=255, unique=True)
+class User(BaseModel, AbstractBaseUser):
+    login_id = models.CharField(max_length=30, unique=True, null=False, blank=False)
+    username = models.CharField(max_length=30, null=False, blank=False)
     univ = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255, blank=True, null=True)
+    email = models.EmailField(max_length=30, unique=True, null=False, blank=False)
     profile_image = models.URLField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+
+    USERNAME_FIELD = 'login_id'
 
     def __str__(self):
         return self.username
