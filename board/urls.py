@@ -2,16 +2,15 @@ from django.urls import path, include
 from rest_framework import routers
 from .views import BoardViewSet
 
+app_name = 'board'
 router = routers.DefaultRouter()
-router.register(r'board', BoardViewSet)  # urls.py의 router
+router.register('board', BoardViewSet)  # urls.py의 router
 
-urlpatterns = router.urls
 #
 urlpatterns = [
     path('', include(router.urls)),
 ]
 #
-# app_name = 'board'
 # urlpatterns = [
 #     path('', views.AllBoardView.as_view(), name='all_board'),
 #     path('<int:pk>/', views.OneBoardView.as_view(), name='index'),

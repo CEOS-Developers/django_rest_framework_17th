@@ -172,3 +172,67 @@ filterset_class = BoardFilter
 * filterset_class는 filter를 해주는 class이고, filterset_fields는 filter를 해주는 field이다. 후자가 훨씬 구현에서는 이득을 가진다.
 * filter는 주로 문자 이외에 모든 것을 다루고, search는 주로 문자를 다룬다.
 * viewSet은 미스터리인거 같다.
+
+# 추가적인 JWT_AUTH 설정
+~~~PYTHON
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'username',
+    'USER_ID_CLAIM': 'username',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+~~~
+
+* 여기에서 user_id_field 에서 USER_ID_FIELD, 디비에서 보는 부분이고, USER_ID_CLAIM 은 토큰에 필드로 넣어주는 부분이다.
+
+~~~python
+user = authenticate(username=request.data.get("username"), password=request.data.get("password"))
+~~~
+
+* 요청에서 받아온 body에 있는 username과 password를 받아서 authenticate 함수에 넣어준다. 로그인이 완료되면 user라는 객체를 반환한다.
+
+## Q1 로그인 인증은 어떻게 하나요? & Q2 JWT는 무엇인가요?
+
+로그인은 크게 2가지 개념으로 구성 되어있다.
+
+1. 인증(Authentication)
+    * 사용자가 누구인지 확인하는 절차
+2. 인가(Authorization)
+    * 사용자를 식별하고 인증된 사용자에게만 권한을 부여하는 절차
+    * 자원의 접근에 대한 허가라고 생각하면 된다.
+
+이런 로그인 과정을 매번 사용자가 접속할 때 마다 수행하는 것은 매번 암호화 연산을 수행하는 만큼 비효율적이다.
+그래서 세션과 쿠키와 같은 방법을 사용해서 
+
+* 쿠키 & 세션
+    쿠키는 클라이언트(브라우저) 로컬에 저장되는 작은 데이터 파일을 말하고, 세션은 세션ID를 통해서 로그인 되어있음을 지속하는 상태를 말한다. 
+    인증된 사용자의 식별자와 랜덤한 문자열로 세션 ID를 만들어서 서버에 저장하고 응답헤더에 넘겨서 클라이언트가 저장할 수 있게 한다. 그리고 쿠키에 저장을 하고 있다가 다음 로그인  때 해당 세션 id를 넘긴다.
+
+* JWT
+    하지만 세션은 서버의 database를 조회하는 방식으로 서버에 무리를 줄 수 있어서 상태가 존재하지 않는 JWT 토큰을 사용한다.
+    이 때 토큰이 탈취 당하게 된다면, 악의적인 사용자에 의해서 지속적으로 사용당할 수 있으므로, 토큰의 유효기간을 짧게 설정해야 한다.

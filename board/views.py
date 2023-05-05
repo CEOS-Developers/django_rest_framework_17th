@@ -67,13 +67,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 
 class BoardFilter(FilterSet):
-    # 필터 걸 속성
     name = filters.CharFilter(field_name='name')
-    university_id = filters.NumberFilter(field_name='university_id_id')
+    university_id = filters.NumberFilter(method='filter_university_id')
+
+    def filter_univeristy_id(self, queryset, name, value):
+        return queryset.filter(**{
+            name: value,
+        })
 
     class Meta:
-        model = Board  # 사용할 모델
-        fields = ['name', 'university_id']  # 사용할 속성
+        model = Board
+        fields = ['name', 'university_id']
 
 
 # ModelViewSet을 상속함으로써 crud 기능이 5줄로 끝남
