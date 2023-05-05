@@ -276,31 +276,31 @@ class PostViewSet(viewsets.ModelViewSet):
 ### 1.로그인 인증
 - 필요성: HTTP 통신으로 요청하면 응답이 한 후 종료되는 stateless 특징때문에 연결이 끊어어지므로 누가 로그인 중인지를 기억해야 하기 때문
 
-#### 1.1 세션과 쿠키를 이용한 인증
+### 1.1 세션과 쿠키를 이용한 인증
 - 사용자의 계정 정보를 읽어 사용자를 인증한 후, 고유한 ID를 발급하여 세션에 저장해두고 세션 ID를 가지고 통신하는 방법으로
 - 서버는 HTTP 응답 헤더에 발급된 Session ID를 실어 보내면서 사용자의 브라우저에서 쿠키를 생성하게(Set Cookie) 하고
 - 사용자의 브라우저는 이후 매 요청마다 HTTP 요청 헤더에 Session ID가 담긴 쿠키를 실어서 보낸다.
 - 서버는 HTTP 요청 헤더에 존재하는 쿠키를 열어 Session ID를 확인하고 세션 저장소에서의 대조를 통해 사용자를 인증 후 데이터를 응답해준다.
 
-#### 장점
+### 장점
 - 사용자의 정보는 세션 저장소에 저장되고, 발급된 Session ID 를 통해 통신하기 때문에 Session ID가 담긴 쿠기가 통신 도중 노출되더라도 유의미한 값을 갖고있지 않아서 안전하다.
 - 각각의 사용자는 고유의 Session ID를 발급 받기 때문에 일일이 회원 정보를 확인할 필요가 없어 서버 자원에 접근하기 용이하다.
 
-#### 단점
+### 단점
 - 하이재킹 공격(쿠키를 탈취하여 사용자인척 요청을 보내는 접근 공격)의 가능성 <br/>
 -> HTTPS 프로토콜 사용과 세션에 만료 시간을 넣어주는 것으로써 해결.
 - 세션 저장소를 사용하기 때문에 추가적인 저장공간이 필요하다.
 
-#### 1.2 Json Web Token을 이용한 인증
+### 1.2 Json Web Token을 이용한 인증
 - 사용자를 인증하고 식별하기 위한 정보들을 암호화시킨 토큰을 통해 사용자의 인증, 인가를 진행하는 방식이다.
 - **Token** = Header + Payload + Verify Signature
-- **Header**
+- **Header** <br/>
 -> 토큰의 타입(**typ**)과 암호화할 방식(**alg**)을 설정
-- **Payload**
+- **Payload** <br/>
 -> 토큰에 담을 정보를 포함
 -> 보통 만료 일시, 발급 일시, 발급자, 권한정보 등을 포함
 -> 클레임(정보의 일부)의 종류로는 Registered, Public, Private로 3가지가 존재
-- **Verify Signature**
+- **Verify Signature** <br/>
 -> Payload가 위변조되지 않았다는 사실을 증명하는 문자열(JSON의 변조를 체크)
 -> Base64 방식으로 인코딩한 Header, Payload 그리고 SECRET KEY로 더한 후 Header에서 설정한 암호화 함수로 암호화한 서명값
 
@@ -308,19 +308,26 @@ class PostViewSet(viewsets.ModelViewSet):
 - 생성된 Access Token을 HTTP 응답 헤더에 실어 사용자에게 보냄으로써 사용자는 인증이 필요한 요청마다 토큰을 HTTP 요청 헤더에 실어 보내고
 - 서버에서는 해당 토큰의 Verify Signature를 SECRET KEY로 복호화한 후, 조작 여부, 유효 기간을 확인하고 Payload를 복호화하여 사용자에 맞는 데이터를 응답해준다.
 
-#### 장점
+### 장점
 - JWT는 발급 후 검증만 거치면 되기 때문에 추가적인 저장공간이 필요없다.
 - 확장성이 뛰어나다.(토큰 기반으로 하는 다른 인증 시스템에 접근이 가능)
 
-#### 단점
+### 단점
 - 한 번 발급되면 유효기간이 완료될 때까지는 계속 사용이 가능하며 중간에 삭제가 불가능하다.
 - 따라서 해커에 의해 정보가 노출된다면 대처할 방법이 필요하다.
 -> Access Token의 만료 시간을 짧게 잡고 Access Token의 재발급을 요청하는 Refresh Token을 추가적으로 발급하여 해결.
 - Payload 정보가 디코딩하면 누구나 접근할 수 있기에 중요한 정보들을 보관할 수 없다.
 - JWT의 길이가 길기 때문에, 인증 요청이 많아지면 서버의 자원낭비가 발생한다.
 
-#### 1.3 OAuth 2.0 을 이용한 인증
+### 1.3 OAuth 2.0 을 이용한 인증
 - 별도의 회원가입 없이 외부 서비스에서도 인증을 가능하게 하고 해당 서비스의 API를 이용하게 해주는 프로토콜
 - Resource Owner(사용자)가 Client(웹 어플리케이션)에게 인증 요청을 하게되면
 - Client는 Authorization Request(인증 요청)를 통해 Authorization Server(인증 서버)에게 로그인 페이지를 요청하고 Resource Owner에게 보내준다.
-- Resource Owner가 인증을 완료하면 Authorization code가 발급되고 url에 실어 Client에게 보냅니다.
+- Resource Owner가 인증을 완료하면 Authorization code가 발급되고 url에 실어 Client에게 보내준다.
+- Client는 해당 코드를 Authorization Server에 보냄으로써 유저 정보와 Access Token, Refresh Token을 받급받는다.
+- Client는 해당 Access Token을 DB에 저장하거나 Resource Owner에게 넘겨주고
+- Resource Owner가 Resource Server의 자원이 필요하면, Client는 Access Token을 담아 Resource Server에 요청하여 자원을 이용한다.
+- 만일 Access Token이 유효하지 않다면, Client는 Authorization Server에 Refresh Token을 보내 Access Token을 재발급 받아 Resource Server에 자원을 요청한다.
+- 만일 Refresh token이 유효하지 않다면, Resource Owner는 새로운 Authorization Grant를 통해 발급받은 코드를 Client에게 넘겨준다.
+
+### JWT 로그인 구현하기
