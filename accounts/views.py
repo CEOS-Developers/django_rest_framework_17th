@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
@@ -11,6 +13,8 @@ from accounts.serializers import RegisterSerializer, UserSerializer
 
 # Create your views here.
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class SignUp(APIView):
     def post(self, request):
@@ -42,7 +46,7 @@ class SignIn(APIView):
 
         # user가 맞다면,
         if user is not None:
-            token = TokenObtainPairSerializer.get_token(user)   # refresh 토큰 생성
+            token = TokenObtainPairSerializer.get_token(user)  # refresh 토큰 생성
             refresh_token = str(token)  # refresh 토큰 문자열화
             access_token = str(token.access_token)  # access 토큰 문자열화
             response = Response(
@@ -64,3 +68,13 @@ class SignIn(APIView):
             return Response(
                 {"message": "로그인에 실패하였습니다."}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class Logout(APIView):
+    def post(self, request):
+        response = Response({
+            "message": "Logout success"
+        }, status=status.HTTP_202_ACCEPTED)
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        return response
