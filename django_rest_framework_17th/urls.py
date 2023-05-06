@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('community/', include('boards.urls')),
     path('timetables/', include('timetables.urls')),
+    path("accounts/", include('accounts.urls')),
 ]
