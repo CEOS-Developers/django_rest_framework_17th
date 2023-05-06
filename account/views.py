@@ -1,3 +1,4 @@
+import jwt
 from django.shortcuts import render
 from .serializers import *
 from rest_framework.views import APIView
@@ -5,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from django.contrib.auth import authenticate
+from django_rest_framework_17th.settings.base import SECRET_KEY
 
 
 # 회원 가입
@@ -51,6 +53,52 @@ class LoginAPIView(APIView):
                 {"message": "Failed to login"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class RefreshAccessToken(APIView):
+    def post(self, request):
+        # 쿠키에 저장된 refresh 토큰 확인
+        refresh_token = request.COOKIES.get('refresh')
+
+        if refresh_token is None:
+            return Response({
+                "message": "Refresh token does not exist"
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # refresh 토큰 디코딩 진행
+        try:
+            payload = jwt.decode(
+                refresh_token, SECRET_KEY, algorithms=['HS256']
+            )
+        except:
+            # refresh 토큰도 만료된 경우 에러 처리
+            return Response({
+                "message": "Expired refresh token, please login again"
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # 해당 refresh 토큰을 가진 유저 정보 불러 오기
+        user = MyUser.objects.get(id=payload['user_id'])
+
+        if user is None:
+            return Response({
+                "message": "User not found"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_active:
+            return Response({
+                "message": "User is inactive"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # access 토큰 재발급 (유효한 refresh 토큰을 가진 경우에만)
+        token = TokenObtainPairSerializer.get_token(user)
+        access_token = str(token.access_token)
+
+        return Response(
+            {
+                "message": "New access token",
+                "access_token": access_token
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 # 로그 아웃
