@@ -21,14 +21,14 @@ class RegisterAPIView(APIView):
 class LoginAPIView(APIView):
     def post(self, request):
         # 유저 인증
-        user = authenticate(
+        myUser = authenticate(
             email=request.data.get("email"), password=request.data.get("password")
         )
         # 해당 이메일, 비밀 번호로 가입한 유저가 있는 경우
-        if user is not None:
-            serializer = MyUserSerializer(user)
+        if myUser is not None:
+            serializer = MyUserSerializer(myUser)
             # jwt, refresh token 발급
-            token = TokenObtainPairSerializer.get_token(user)
+            token = TokenObtainPairSerializer.get_token(myUser)
             refresh_token = str(token)
             access_token = str(token.access_token)
             res = Response(
@@ -46,7 +46,11 @@ class LoginAPIView(APIView):
             res.set_cookie("refresh", refresh_token, httponly=True)
             return res
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            print("Login error")
+            return Response(
+                {"message": "Failed to login"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 # 로그 아웃

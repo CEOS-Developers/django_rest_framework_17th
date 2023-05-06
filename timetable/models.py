@@ -4,7 +4,7 @@ from account.models import *
 
 
 class TimeTable(BaseModel):
-    profile = models.ForeignKey("account.Profile", on_delete=models.CASCADE)
+    myUser = models.ForeignKey("account.MyUser", on_delete=models.CASCADE, default=1)
     name = models.CharField(max_length=60)
     lecture = models.ManyToManyField("Lecture", through="TakeLecture")
 
@@ -40,12 +40,12 @@ class TakeLecture(BaseModel):
     lecture = models.ForeignKey("Lecture", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.profile} started taking {self.lecture}"
+        return f"{self.timeTable.myUser} started taking {self.lecture}"
 
 
 class LectureReview(BaseModel):
     lecture = models.ForeignKey("Lecture", on_delete=models.CASCADE)
-    profile = models.ForeignKey("account.Profile", on_delete=models.CASCADE)
+    myUser = models.ForeignKey("account.MyUser", on_delete=models.CASCADE, default=1)
     rating = models.CharField(max_length=10)
     contents = models.CharField(max_length=200)
 
@@ -55,7 +55,7 @@ class LectureReview(BaseModel):
 
 class ReviewLike(BaseModel):
     lectureReview = models.ForeignKey("LectureReview", on_delete=models.CASCADE)
-    profile = models.ForeignKey("account.Profile", related_name="profiles", on_delete=models.CASCADE)
+    myUser = models.ForeignKey("account.MyUser", related_name="myUsers", on_delete=models.CASCADE, default=1)
 
     def __str__(self):
-        return f"{self.profile} 's like on {self.lectureReview}"
+        return f"{self.myUser} 's like on {self.lectureReview}"
