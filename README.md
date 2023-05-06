@@ -147,3 +147,117 @@ Title은 `title = filters.CharFilter(field_name='title', lookup_expr='icontains'
 - 핫게시판의 기준을 오로지 댓글수+공감수로 한다면 filter 로 구현할 수 있을 것 같다  
 - 어짜피 실제로 사용할 만한 세분화된 기능들을 개발하려면 ViewSet안에서도 따로 정의해야할게 많은 것 같은데 이럼 CBV보다 더 좋은건지는 아직 잘 모르겠따  
 - 다들 중간고사 잘 마무리하고 만나요👻  
+
+---
+## [3주차]  
+
+## 👀 로그인 인증은 어떻게 하나요? JWT 는 무엇인가요?
+### 1. Cookie & Session 기반 인증  
+- Cookie: 클라이언트가 어떠한 웹사이트를 방문할 경우, 그 사이트가 사용하고 있는 서버를 통해 `클라이언트의 브라우저`에 설치되는 작은 기록 정보 파일  
+- Session: 세션은 비밀번호 등 클라이언트의 인증 정보를 쿠키가 아닌 `서버 측에 저장하고 관리`, 브라우저 종료할 때까지 인증상태가 유지됨  
+- 동작 방식:  
+ 1️⃣ 서버는 클라이언트의 로그인 요청에 대한 응답을 작성할 때, 인증 정보는 서버에 저장하고 클라이언트 식별자인 SESSION ID를 쿠키에 담음  
+ 2️⃣ 이후 클라이언트는 요청을 보낼 때마다, SESSION ID 쿠키를 함께 보냄  
+ 3️⃣ 서버는 SESSION ID 유효성을 판별해 클라이언트를 식별함  
+- 장점: 각 사용자마다 고유한 세션 ID가 발급되기 때문에, 요청이 들어올 때마다 회원정보를 확인할 필요가 없음  
+- 단점: 쿠키를 해커가 중간에 탈취하여 클라이언트인척 위장할 수 있는 위험성 존재, 서버에서 세션 저장소를 사용하므로 요청이 많아지면 서버에 부하가 심해짐  
+
+### 2. JWT 기반 인증  
+- JWT(JSON Web Token): 인증에 필요한 정보들을 암호화시킨 토큰  
+- JWT 구조: `Header` , `Payload` , `Signature` 로 이루어짐. Header는 정보를 암호화할 해싱 알고리즘 및 토큰의 타입을 지정, Payload는 실제 정보(클라이언트의 고유 ID 값 및 유효 기간 등)를 지님, Signature는 인코딩된 Header와 Payload를 더한 뒤 비밀키로 해싱하여 생성 → 토큰의 위변조 여부를 확인하는데 사용됨
+- 동작 방식:  
+ 1️⃣ 클라이언트 로그인 요청이 들어오면, 서버는 검증 후 클라이언트 고유 ID 등의 정보를 Payload에 담음  
+ 2️⃣ 암호화할 비밀키를 사용해 Access Token(JWT)을 발급함  
+ 3️⃣ 클라이언트는 전달받은 토큰을 저장해두고, 서버에 요청할 때 마다 토큰을 요청 헤더 Authorization에 포함시켜 함께 전달함  
+ 4️⃣ 서버는 토큰의 Signature를 비밀키로 복호화한 다음, 위변조 여부 및 유효 기간 등을 확인함  
+ 5️⃣ 유효한 토큰이라면 요청에 응답함  
+ - 장점: 인증 정보에 대한 별도의 저장소가 필요없음, 확장성이 우수함  
+ - 단점: 토큰의 길이가 길어, 인증 요청이 많아질수록 네트워크 부하가 심해짐  
+
+### 3. OAuth 2.0을 이용한 인증  
+- OAuth: 구글, 페이스북, 트위터와 같은 다양한 플랫폼의 특정한 사용자 데이터에 접근하기 위해 클라이언트(우리의 서비스)가 사용자의 접근 권한을 위임(Delegated Authorization)받을 수 있는 표준 프로토콜.  
+쉽게 말하자면, 우리의 서비스가 우리 서비스를 이용하는 유저의 타사 플랫폼 정보에 접근하기 위해서 권한을 타사 플랫폼으로부터 위임 받는 것  
+- 나의 앱은 클라이언트👧 / 사용자는 리소스 오너🙋‍♂️ / 구글, 카카오 같은 큰 서비스는 리소스 서버🧝 (사실 데이터 처리를 담당하는 Resource 서버와 인증을 담당하는 Authorization Server로 구성됨)  
+- 동작 방식:  
+![image](https://user-images.githubusercontent.com/90256209/236613747-47da422f-971f-4d1b-a4c2-2ed0f5dbd972.png)  
+
+---
+## 🗣️ 피드백 반영 및 수정사항  
+1. 찬혁오빠가 구현한 ***safe delete*** 참고해서 base model에 delete 메소드 추가함  
+   데이터 삭제시 deleted_at 컬럼에 삭제시간을 저장하는 방식 = deleted_at이 null이면 정상(=삭제 안된) 게시물  
+2. "해당 글의 status는 D인데 조회했을때 보이면 안될 것 같아요🥹🥹"  
+   → Filter 클래스에 ***deleted_at이 null인 것만*** 조건을 추가한 ***filter 메소드***를 구현함  
+
+#### (수정한 filter 메소드)  
+![image](https://user-images.githubusercontent.com/90256209/236614033-d4ef3388-8987-4dfb-bce0-fcd28f63b5a2.png)  
+#### (결과 확인)  
+⬇️ 이렇게 DB에서 `deleted_at` 컬럼에 삭제시간이 들어가 있는 경우,  
+![image](https://user-images.githubusercontent.com/90256209/236614073-0a8baead-feec-4088-906c-55b99d86fed4.png)  
+➡️ postman으로 조회했을때 안보이는걸 확인할 수 있다!! profile_id가 2인 글은 삭제되었으므로 필터링해도 안보임!  
+![image](https://user-images.githubusercontent.com/90256209/236614174-b11ebd10-677d-424d-b7d0-5d542ce06e4d.png)  
+
+---
+## ⭐ JWT 로그인 구현하기  
+
+### 📌 커스텀 User 모델 사용하기  
+`AbstractBaseUser` 를 상속한 커스텀 User 모델을 만들었다. (기존에는 기본 User 모델을 OneToOne 필드로 사용한 Profile 모델을 사용했었음)  
+AbstractUser와 AbstractBaseUser의 차이는 기본 제공하는 필드들이 다르다! (AbstractUser가 더 많이 제공함ㅎㅎ)  
++유저 모델을 커스텀할 때
+- `USERNAME_FIELD` 은 유저를 고유하게 식별할때 쓰는 필드고,
+- `REQUIRED_FIELDS` 는 반드시 필요한 필드다.  
+나는 유저 식별을 `email`로 하게끔 만들었다.  
+```  
+class MyUser(AbstractBaseUser):
+    email = models.EmailField(max_length=255, unique=True)
+    nickname = models.CharField(max_length=100, unique=True)
+    # password, last_login 은 기본 제공
+    profile_img_path = models.URLField(blank=True, null=True)
+    friends = models.ManyToManyField('self', blank=True)
+    school = models.ForeignKey("School", on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = MyUserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["nickname"]
+
+    def __str__(self):
+        return self.email
+```  
+UserManager 클래스도 `BaseUserManager`를 상속받아서 커스텀해주었다.
+
+```  
+class MyUserManager(BaseUserManager):
+    def create_user(self, email, nickname, school=None, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Users must have an email address")
+
+        user = self.model(
+            email=email,
+            nickname=nickname,
+            school=school,
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nickname, school=None, password=None, **extra_fields):
+```  
+`create_superuser()`는 `create_user`와 거의 비슷하지만, `superuser.is_admin = True`를 자동 설정한다는 점이 다르다.  
+
+### 📌 회원가입 구현하기  
+Postman으로 확인해보니 잘된다ㅎㅎ  
+![image](https://user-images.githubusercontent.com/90256209/236615823-7dde4a0b-a8f7-4824-aa42-f054c8362583.png)  
+번외) 원래 회원가입할땐 자동로그인이 아니면 토큰 발급을 안한다. 근데 사진에서 쿠키에 뭔가가 있는건 직전에 테스트하던 회원 로그아웃을 안해서 아직 쿠키가 남아있음...ㅎ ~~(NG)~~  
+  
+### 📌 JWT Login 구현하기 (Access 토큰, Refresh 토큰 발급)  
+
+
+### 📌 Refresh 토큰을 통한 Access 토큰 재발급  
+
+### 📌 JWT Logout 구현하기  
+
+### 📌 Permission 설정하기  
