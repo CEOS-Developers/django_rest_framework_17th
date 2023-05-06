@@ -1,9 +1,8 @@
 import logging
 
-from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -14,12 +13,13 @@ from accounts.serializers import RegisterSerializer, UserSerializer
 
 # Create your views here.
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 class SignUp(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
