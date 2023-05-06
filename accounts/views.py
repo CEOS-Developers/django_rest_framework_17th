@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -16,7 +17,9 @@ from accounts.serializers import RegisterSerializer, UserSerializer
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class SignUp(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -26,6 +29,8 @@ class SignUp(APIView):
 
 
 class SignIn(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         username = request.data['username']
         password = request.data['password']

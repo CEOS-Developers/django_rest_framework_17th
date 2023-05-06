@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import *
 

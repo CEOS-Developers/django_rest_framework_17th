@@ -13,7 +13,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CourseDetail
-        exclude = ['created_at', 'modified_at']
+        exclude = ['created_at', 'modified_at', 'course']
 
 
 class TimetableSerializer(serializers.ModelSerializer):
