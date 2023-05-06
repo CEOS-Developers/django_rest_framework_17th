@@ -53,3 +53,13 @@ class AuthView(APIView):
             return res
         else:
             return Response({"message": "존재하지 않는 사용자입니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 로그아웃
+    def get(self, request):
+        # 쿠키에 저장된 토큰 삭제 => 로그아웃 처리
+        response = Response({
+            "message": "Logout success"
+            }, status=status.HTTP_202_ACCEPTED)
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
