@@ -149,7 +149,7 @@ Title은 `title = filters.CharFilter(field_name='title', lookup_expr='icontains'
 - 다들 중간고사 잘 마무리하고 만나요👻  
 
 ---
-## [3주차]  
+## [5주차 - Simple JWT]  
 
 ## 👀 로그인 인증은 어떻게 하나요? JWT 는 무엇인가요?
 ### 1. Cookie & Session 기반 인증  
