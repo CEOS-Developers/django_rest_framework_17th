@@ -427,9 +427,9 @@ SIMPLE_JWT = {
 - set_cookie 라는 명령을 통해 응답으로 보내준 토큰들을 브라우저가 cookie를 형성하여 그 속에 갖고 있도록하였다.
 - 자세한 내용은 로그아웃 부분에서 이어서 설명하겠다.
 - 정상적으로 로그인 작동함을 확인했다.
-<img width="996" alt="스크린샷 2023-05-06 오전 4 08 36" src="https://user-images.githubusercontent.com/98458302/236617126-68c15169-25ca-4be6-a914-e10f41a25ac7.png">
+<img width="996" alt="스크린샷 2023-05-06 오전 4 08 36" src="https://user-images.githubusercontent.com/98458302/236617126-68c15169-25ca-4be6-a914-e10f41a25ac7.png"> <br/>
 - Cookie 또한 형성되어 토큰을 지니고 있다.
-<img width="1018" alt="스크린샷 2023-05-06 오후 4 59 07" src="https://user-images.githubusercontent.com/98458302/236617176-1a47319e-221a-4206-bed1-65fa40adcd2a.png">
+<img width="1018" alt="스크린샷 2023-05-06 오후 4 59 07" src="https://user-images.githubusercontent.com/98458302/236617176-1a47319e-221a-4206-bed1-65fa40adcd2a.png"> <br/>
 - 잘못된 계정으로 로그인을 진행하면 에러 메세지가 출력된다.
 <img width="1009" alt="스크린샷 2023-05-06 오전 4 09 00" src="https://user-images.githubusercontent.com/98458302/236617285-1e5342c2-beb9-411c-ae76-904ce3a566ba.png">
 
@@ -470,21 +470,22 @@ urlpatterns = [
 ### 3. 겪은 오류와 해결
 - (1) AbstractBaseUser의 고유식별자를 명시하지 않아 발생한 오류
 - AbstractUser에서 AbstractBaseUser를 상속받는 것으로 코드를 고치고 migrate를 진행하였더니 다음과 같은 오류가 발생했다.
-<img width="621" alt="스크린샷 2023-05-06 오전 2 33 46" src="https://user-images.githubusercontent.com/98458302/236617985-935274c7-f221-4c3c-be7a-029fde26920e.png">
+<img width="621" alt="스크린샷 2023-05-06 오전 2 33 46" src="https://user-images.githubusercontent.com/98458302/236617985-935274c7-f221-4c3c-be7a-029fde26920e.png"> <br/>
 - AbstractUser는 AbstractBaseUser와 다르게 이미 고유식별자가 포함되어 있어서 USERNAME FIELD를 사용할 필요가 없지만
 - AbstractBaseUser에서는 USERNAME FIELD = '고유식별이 될 컬럼' 을 통해 고유식별이 가능하게 설정을 해주어야 한다고 한다.
-![Screenshot at Jan 10 17-31-10](https://user-images.githubusercontent.com/98458302/236618390-a4987d94-fadb-4d78-aeaa-e280c6a1a695.jpg)
 - 따라서 USERNAME_FIELD = 'login_id' 를 Model 구현부분에 삽입해줌으로써 해결하였다.
 
 <br></br>
 
 - (2) 사용자 정의 모델에 대한 사용자 관리자를 생성해주지 않아서 발생한 오류
 - Postman을 통해 로그인을 Test하는 도중 갑자기 서버가 다운되는 에러가 발생하였다.
-<img width="585" alt="스크린샷 2023-05-06 오전 4 02 45" src="https://user-images.githubusercontent.com/98458302/236618570-5994238f-546f-43d9-9842-d5b981d207b9.png">
+<img width="585" alt="스크린샷 2023-05-06 오전 4 02 45" src="https://user-images.githubusercontent.com/98458302/236618570-5994238f-546f-43d9-9842-d5b981d207b9.png"> <br/>
 - 오류가 발생한 원인은 관리자가 생성되어 있지 않다는 것이었다.
-<img width="660" alt="스크린샷 2023-05-06 오전 4 02 10" src="https://user-images.githubusercontent.com/98458302/236618585-da60c522-112c-4050-9be8-6d3d8065a61a.png">
+<img width="660" alt="스크린샷 2023-05-06 오전 4 02 10" src="https://user-images.githubusercontent.com/98458302/236618585-da60c522-112c-4050-9be8-6d3d8065a61a.png"> <br/>
 - 사용자 정의 모델을 사용하는 경우 사용자 관리자인 UserManager()을 설정해줘야했다.
 - UserModel의 구현부에 objects = UserManager() 를 삽입해줌으로써 해결하였다.
+
+<br></br>
 
 ### 4. 회고
 - 확실히 로그인과 회원가입에 관해서는 레퍼런스들이 차고 넘친다.
