@@ -75,5 +75,5 @@ class Friend(BaseTimeModel):
     is_accepted = models.BooleanField(default=False)
 
     def __str__(self):
-        return 'from user: {}, to user: {}'.format(self.from_user.username, self.to_user.username)
+        return 'from user: {}, to user: {}'.format(self.from_user.nickname, self.to_user.nickname)
 
