@@ -470,7 +470,9 @@ urlpatterns = [
 ### 3. 겪은 오류와 해결
 - (1) AbstractBaseUser의 고유식별자를 명시하지 않아 발생한 오류
 - AbstractUser에서 AbstractBaseUser를 상속받는 것으로 코드를 고치고 migrate를 진행하였더니 다음과 같은 오류가 발생했다.
+
 <img width="621" alt="스크린샷 2023-05-06 오전 2 33 46" src="https://user-images.githubusercontent.com/98458302/236617985-935274c7-f221-4c3c-be7a-029fde26920e.png"> <br/>
+
 - AbstractUser는 AbstractBaseUser와 다르게 이미 고유식별자가 포함되어 있어서 USERNAME FIELD를 사용할 필요가 없지만
 - AbstractBaseUser에서는 USERNAME FIELD = '고유식별이 될 컬럼' 을 통해 고유식별이 가능하게 설정을 해주어야 한다고 한다.
 - 따라서 USERNAME_FIELD = 'login_id' 를 Model 구현부분에 삽입해줌으로써 해결하였다.
