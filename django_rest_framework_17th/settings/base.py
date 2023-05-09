@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'global_entity.apps.GlobalConfig',
     'board.apps.BoardConfig',
     'timetable.apps.TimetableConfig',
-    'django_extensions',
+    #'django_extensions',
     'rest_framework_simplejwt',
 ]
 
