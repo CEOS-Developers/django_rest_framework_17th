@@ -147,3 +147,241 @@ Title은 `title = filters.CharFilter(field_name='title', lookup_expr='icontains'
 - 핫게시판의 기준을 오로지 댓글수+공감수로 한다면 filter 로 구현할 수 있을 것 같다  
 - 어짜피 실제로 사용할 만한 세분화된 기능들을 개발하려면 ViewSet안에서도 따로 정의해야할게 많은 것 같은데 이럼 CBV보다 더 좋은건지는 아직 잘 모르겠따  
 - 다들 중간고사 잘 마무리하고 만나요👻  
+
+---
+## [5주차 - Simple JWT]  
+
+## 👀 로그인 인증은 어떻게 하나요? JWT 는 무엇인가요?
+### 1. Cookie & Session 기반 인증  
+- Cookie: 클라이언트가 어떠한 웹사이트를 방문할 경우, 그 사이트가 사용하고 있는 서버를 통해 `클라이언트의 브라우저`에 설치되는 작은 기록 정보 파일  
+- Session: 세션은 비밀번호 등 클라이언트의 인증 정보를 쿠키가 아닌 `서버 측에 저장하고 관리`, 브라우저 종료할 때까지 인증상태가 유지됨  
+- 동작 방식:  
+ 1️⃣ 서버는 클라이언트의 로그인 요청에 대한 응답을 작성할 때, 인증 정보는 서버에 저장하고 클라이언트 식별자인 SESSION ID를 쿠키에 담음  
+ 2️⃣ 이후 클라이언트는 요청을 보낼 때마다, SESSION ID 쿠키를 함께 보냄  
+ 3️⃣ 서버는 SESSION ID 유효성을 판별해 클라이언트를 식별함  
+- 장점: 각 사용자마다 고유한 세션 ID가 발급되기 때문에, 요청이 들어올 때마다 회원정보를 확인할 필요가 없음  
+- 단점: 쿠키를 해커가 중간에 탈취하여 클라이언트인척 위장할 수 있는 위험성 존재, 서버에서 세션 저장소를 사용하므로 요청이 많아지면 서버에 부하가 심해짐  
+
+### 2. JWT 기반 인증  
+- JWT(JSON Web Token): 인증에 필요한 정보들을 암호화시킨 토큰  
+- JWT 구조: `Header` , `Payload` , `Signature` 로 이루어짐. Header는 정보를 암호화할 해싱 알고리즘 및 토큰의 타입을 지정, Payload는 실제 정보(클라이언트의 고유 ID 값 및 유효 기간 등)를 지님, Signature는 인코딩된 Header와 Payload를 더한 뒤 비밀키로 해싱하여 생성 → 토큰의 위변조 여부를 확인하는데 사용됨
+- 동작 방식:  
+ 1️⃣ 클라이언트 로그인 요청이 들어오면, 서버는 검증 후 클라이언트 고유 ID 등의 정보를 Payload에 담음  
+ 2️⃣ 암호화할 비밀키를 사용해 Access Token(JWT)을 발급함  
+ 3️⃣ 클라이언트는 전달받은 토큰을 저장해두고, 서버에 요청할 때 마다 토큰을 요청 헤더 Authorization에 포함시켜 함께 전달함  
+ 4️⃣ 서버는 토큰의 Signature를 비밀키로 복호화한 다음, 위변조 여부 및 유효 기간 등을 확인함  
+ 5️⃣ 유효한 토큰이라면 요청에 응답함  
+ - 장점: 인증 정보에 대한 별도의 저장소가 필요없음, 확장성이 우수함  
+ - 단점: 토큰의 길이가 길어, 인증 요청이 많아질수록 네트워크 부하가 심해짐  
+
+### 3. OAuth 2.0을 이용한 인증  
+- OAuth: 구글, 페이스북, 트위터와 같은 다양한 플랫폼의 특정한 사용자 데이터에 접근하기 위해 클라이언트(우리의 서비스)가 사용자의 접근 권한을 위임(Delegated Authorization)받을 수 있는 표준 프로토콜.  
+쉽게 말하자면, 우리의 서비스가 우리 서비스를 이용하는 유저의 타사 플랫폼 정보에 접근하기 위해서 권한을 타사 플랫폼으로부터 위임 받는 것  
+- 나의 앱은 클라이언트👧 / 사용자는 리소스 오너🙋‍♂️ / 구글, 카카오 같은 큰 서비스는 리소스 서버🧝 (사실 데이터 처리를 담당하는 Resource 서버와 인증을 담당하는 Authorization Server로 구성됨)  
+- 동작 방식:  
+![image](https://user-images.githubusercontent.com/90256209/236613747-47da422f-971f-4d1b-a4c2-2ed0f5dbd972.png)  
+
+---
+## 🗣️ 피드백 반영 및 수정사항  
+1. 찬혁오빠가 구현한 ***safe delete*** 참고해서 base model에 delete 메소드 추가함  
+   데이터 삭제시 deleted_at 컬럼에 삭제시간을 저장하는 방식 = deleted_at이 null이면 정상(=삭제 안된) 게시물  
+2. "해당 글의 status는 D인데 조회했을때 보이면 안될 것 같아요🥹🥹"  
+   → Filter 클래스에 ***deleted_at이 null인 것만*** 조건을 추가한 ***filter 메소드***를 구현함  
+
+#### (수정한 filter 메소드)  
+![image](https://user-images.githubusercontent.com/90256209/236614033-d4ef3388-8987-4dfb-bce0-fcd28f63b5a2.png)  
+#### (결과 확인)  
+⬇️ 이렇게 DB에서 `deleted_at` 컬럼에 삭제시간이 들어가 있는 경우,  
+![image](https://user-images.githubusercontent.com/90256209/236614073-0a8baead-feec-4088-906c-55b99d86fed4.png)  
+➡️ postman으로 조회했을때 안보이는걸 확인할 수 있다!! profile_id가 2인 글은 삭제되었으므로 필터링해도 안보임!  
+![image](https://user-images.githubusercontent.com/90256209/236614174-b11ebd10-677d-424d-b7d0-5d542ce06e4d.png)  
+
+---
+## 👩‍💻 JWT 로그인 구현하기  
+
+### 📌 커스텀 User 모델 사용하기  
+`AbstractBaseUser` 를 상속한 커스텀 User 모델을 만들었다. (기존에는 기본 User 모델을 OneToOne 필드로 사용한 Profile 모델을 사용했었음)  
+AbstractUser와 AbstractBaseUser의 차이는 기본 제공하는 필드들이 다르다! (AbstractUser가 더 많이 제공함ㅎㅎ)  
++유저 모델을 커스텀할 때
+- `USERNAME_FIELD` 은 유저를 고유하게 식별할때 쓰는 필드고,
+- `REQUIRED_FIELDS` 는 반드시 필요한 필드다.  
+나는 유저 식별을 `email`로 하게끔 만들었다.  
+```  
+class MyUser(AbstractBaseUser):
+    email = models.EmailField(max_length=255, unique=True)
+    nickname = models.CharField(max_length=100, unique=True)
+    # password, last_login 은 기본 제공
+    profile_img_path = models.URLField(blank=True, null=True)
+    friends = models.ManyToManyField('self', blank=True)
+    school = models.ForeignKey("School", on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = MyUserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["nickname"]
+
+    def __str__(self):
+        return self.email
+```  
+UserManager 클래스도 `BaseUserManager`를 상속받아서 커스텀해주었다.
+
+```  
+class MyUserManager(BaseUserManager):
+    def create_user(self, email, nickname, school=None, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Users must have an email address")
+
+        user = self.model(
+            email=email,
+            nickname=nickname,
+            school=school,
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nickname, school=None, password=None, **extra_fields):
+```  
+`create_superuser()`는 `create_user`와 거의 비슷하지만, `superuser.is_admin = True`를 자동 설정한다는 점이 다르다.  
+
+
+### 📌 회원가입 구현하기  
+Postman으로 확인해보니 잘된다ㅎㅎ  
+![image](https://user-images.githubusercontent.com/90256209/236615823-7dde4a0b-a8f7-4824-aa42-f054c8362583.png)  
+번외) 원래 회원가입할땐 자동로그인이 아니면 토큰 발급을 안한다. 근데 사진에서 쿠키에 뭔가가 있는건 직전에 테스트하던 회원 로그아웃을 안해서 아직 쿠키가 남아있음...ㅎ ~~(NG)~~  
+
+
+### 📌 JWT Login 구현하기 (Access 토큰, Refresh 토큰 발급)  
+로그인 구현할 때 **Access 토큰**은 **HTTP Response**로 프론트한테 주는게 맞는거 같은데, **Refresh 토큰**도 이렇게 줄지 고민이 됐다.  
+여러 블로그들을 봤는데, 어떤 사람은 그냥 둘다 Response(JSON 형태)로 주고... 또 어떤 사람은 둘다 쿠키에 넣고... 어떤 사람은 Access 토큰은 Response에, Refresh 토큰은 쿠키에 넣더라ㅎㅎ  
+대체 뭐가 더 좋은 방법일까?? 궁금해졌다. 그래서 바아로 구글링했다.  
+
+
+결론은.. JWT로 보안성이 높은 로그인을 구현하려면,  
+⭐**백엔드에서 프론트엔드로 Access Token은 JSON 형태로 넘겨주고, Refresh Token은 Cookie에 넣어주어야 한다**⭐  
+아래 링크에 자세한 이유가 나와있다!  
+https://medium.com/@uk960214/refresh-token-%EB%8F%84%EC%9E%85%EA%B8%B0-f12-dd79de9fb0f0  
+
+
+그래서 나도 리프레시 토큰을 쿠키에 넣어주는 코드를 구현했다! (근데 이건 과제니까.. 리프레시 토큰도 JSON 응답에서 한눈에 보고 싶어서 JSON 응답에도 넣어줬다)  
+
+
+이제, Postman으로 확인해보자!  
+- 로그인 성공시 JSON 응답으로 access 토큰, refresh 토큰 둘다 잘 오는걸 확인 가능하다  
+![image](https://user-images.githubusercontent.com/90256209/236616656-8ce25ea2-a412-4868-8b48-a951d15c52f2.png)  
+- 쿠키에도 refresh 토큰이 잘 들어가 있다  
+![image](https://user-images.githubusercontent.com/90256209/236616689-3158903d-eda2-4f05-a272-8c033323d83a.png)  
+
+
+➡️ 발급 받은 토큰을 디코딩해보면, 유저의 id(pk)와 토큰 발급시간(iat), 토큰 만료시간(exp)을 볼 수 있다.  
+내가 `2023-05-06 08:04:08' 에 로그인 했고,  
+```  
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+```  
+⬇️ 이렇게 토큰 유효기간을 30분으로 설정했기 때문에, 토큰 만료시간은 아래 사진처럼 `2023-05-06 08:34:08` 로 나오는게 맞다!!  
+![image](https://user-images.githubusercontent.com/90256209/236616826-4b4bd354-0988-4f1a-be66-ce5841e31122.png)  
+
+
+### 📌 Refresh 토큰을 통한 Access 토큰 재발급  
+로그인할때 access 토큰, refresh 토큰을 발급해주는 걸로 끝내는게 아니라, **실제로 토큰이 만료되었을때 refresh 토큰으로 토큰을 재발급받는 기능**을 구현하고 싶어서 해봤다.  
+대략적인 흐름은 `refresh 토큰이 유효한지 확인` → `refresh 토큰에 담긴 유저 id 로 유저 불러오기` → `그 유저로 다시 access 토큰 발급` 이렇다ㅎㅎ  
+코드 설명은 주석으로 자세하게 해놓았다..!  
+```  
+class RefreshAccessToken(APIView):
+    def post(self, request):
+        # 쿠키에 저장된 refresh 토큰 확인
+        refresh_token = request.COOKIES.get('refresh')
+
+        if refresh_token is None:
+            return Response({
+                "message": "Refresh token does not exist"
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # refresh 토큰 디코딩 진행
+        try:
+            payload = jwt.decode(
+                refresh_token, SECRET_KEY, algorithms=['HS256']
+            )
+        except:
+            # refresh 토큰도 만료된 경우 에러 처리
+            return Response({
+                "message": "Expired refresh token, please login again"
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # 해당 refresh 토큰을 가진 유저 정보 불러 오기
+        user = MyUser.objects.get(id=payload['user_id'])
+
+        if user is None:
+            return Response({
+                "message": "User not found"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_active:
+            return Response({
+                "message": "User is inactive"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # access 토큰 재발급 (유효한 refresh 토큰을 가진 경우에만)
+        token = TokenObtainPairSerializer.get_token(user)
+        access_token = str(token.access_token)
+
+        return Response(
+            {
+                "message": "New access token",
+                "access_token": access_token
+            },
+            status=status.HTTP_200_OK
+        )
+```  
+
+
+➡️포스트맨으로 테스트 해봤더니 새로운 토큰이 잘 발급된다..! 이제 프론트에서는 이 새로운 토큰을 헤더에 넣어서 요청을 보내면 된다.  
+![image](https://user-images.githubusercontent.com/90256209/236617483-aabc803a-4800-4e6b-9683-dbd3d9db60eb.png)  
+
+
+### 📌 JWT Logout 구현하기  
+로그아웃 로직은 이렇다.  
+1️⃣ 프론트에서 LogoutApi를 호출한다.  
+2️⃣ 호출과 동시에 프론트는 가지고 있던 Access token을 삭제한다.  
+3️⃣ 백엔드에서는 cookie에 존재하는 Refresh token을 삭제한다.  
+그래서 나는 쿠키의 Refresh 토큰을 삭제해주도록 구현했다. Postman으로 확인해보자ㅎㅎ  
+![image](https://user-images.githubusercontent.com/90256209/236617700-df7ef90c-afe3-4c40-9541-757e38c4900d.png)  
+➡️ 로그아웃이 잘되서 쿠키에 있던 refresh 토큰이 사라진다..!
+
+
+### 📌 Permission 설정하기  
+`permissions.py` 파일을 새로 만들어서 permission을 커스텀해주고, `community` 에 있는 게시판, 게시글 API에 적용해줬다.  
+```  
+class IsOwnerOrReadonly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # 로그인한 사용자인 경우 API 사용 가능
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        # GET, OPTION, HEAD 요청일 때는 그냥 허용
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # DELETE, PATCH 일 때는 현재 사용자와 객체가 참조 중인 사용자가 일치할 때만 허용
+        return obj.myUser == request.user
+```  
+➡️ Postman으로 확인해보자. 게시판 조회 API에 JWT가 잘 적용되었는지 볼 것이다  
+- 유효기간이 만료된 경우: 이렇게 친절하게 알려준다ㅎㅎ  
+![image](https://user-images.githubusercontent.com/90256209/236618467-ceff90f0-a51a-4207-8db5-be76f02758a2.png)  
+- 유효한 토큰으로 다시 요청을 보내면, 다시 잘 보인다!  
+![image](https://user-images.githubusercontent.com/90256209/236618489-518bad5d-c67d-4a3f-8552-7d6a0c3c9f7b.png)  
+
+---
+## 🍀 느낀점  
+***장고는 편리하다...*** 놀랐던게 장고에서는 클라이언트가 넘겨준 JWT로 유저를 불러오는걸 무려 **함수 하나**로 제공한다.. JWT를 추출해서, 파싱하고, 디코딩하고, 유저ID를 추출해서, 그 유저ID로 DB에서 유저 정보를 불러오는 로직을 내가 직접 클래스에 작성할 필요 없이 `authenticate()` 함수 하나로 그냥 끝나버리는 것... (약간 허무한거같기두 ㅎ)  
+
+공식 문서에는 이렇게 나와있다.  
+
+
+![image](https://user-images.githubusercontent.com/90256209/236618752-bd3c3149-b8b0-4272-a12a-02a942f8fe54.png)  
+
+
+이번 기회로 로그인 및 사용자 인증에 대해 다시 자세히 복습해 볼 수 있어서 재밌었당!
