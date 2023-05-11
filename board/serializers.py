@@ -6,7 +6,7 @@ from account.serializers import *
 
 class BoardSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
-    university = UniversitySerializer()
+    university = UniversitySerializer
 
     class Meta:
         model = Board  # product 모델 사용
@@ -16,8 +16,8 @@ class BoardSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    board = BoardSerializer()
-    writer = UserSerializer()
+    board = BoardSerializer
+    writer = UserSerializer
 
     class Meta:
         model = Post  # product 모델 사용
@@ -28,8 +28,8 @@ class FriendshipSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
 
-    from_user = UserSerializer()
-    to_user = UserSerializer()
+    from_user = UserSerializer
+    to_user = UserSerializer
 
     class Meta:
         model = Friendship  # product 모델 사용
@@ -40,7 +40,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
     # comment = self()
-    writer = UserSerializer()
+    writer = UserSerializer
 
     class Meta:
         model = Comment  # product 모델 사용
@@ -50,8 +50,8 @@ class CommentSerializer(serializers.ModelSerializer):
 class LikePostSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    post = PostSerializer()
-    who = UserSerializer()
+    post = PostSerializer
+    who = UserSerializer
 
     class Meta:
         model = LikePost  # product 모델 사용
@@ -61,8 +61,8 @@ class LikePostSerializer(serializers.ModelSerializer):
 class ScrapPostSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    post = PostSerializer()
-    who = UserSerializer()
+    post = PostSerializer
+    who = UserSerializer
 
     class Meta:
         model = ScrapPost  # product 모델 사용
@@ -72,8 +72,8 @@ class ScrapPostSerializer(serializers.ModelSerializer):
 class BlackPostSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    post = PostSerializer()
-    who = UserSerializer()
+    post = PostSerializer
+    who = UserSerializer
 
     class Meta:
         model = BlackPost  # product 모델 사용
@@ -83,8 +83,8 @@ class BlackPostSerializer(serializers.ModelSerializer):
 class LikeCommentSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    comment = CommentSerializer()
-    who = UserSerializer()
+    comment = CommentSerializer
+    who = UserSerializer
 
     class Meta:
         model = LikeComment  # product 모델 사용
@@ -94,8 +94,8 @@ class LikeCommentSerializer(serializers.ModelSerializer):
 class BlackCommentSerializer(serializers.ModelSerializer):
     # __all__ 이라가하면 필드 명시할 필요가 없음
     # university =
-    comment = CommentSerializer()
-    who = UserSerializer()
+    comment = CommentSerializer
+    who = UserSerializer
 
     class Meta:
         model = BlackComment  # product 모델 사용
