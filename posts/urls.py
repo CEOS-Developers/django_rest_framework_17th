@@ -8,16 +8,11 @@ from rest_framework.routers import DefaultRouter
 app_name = 'posts'
 router = DefaultRouter()
 
-router.register('post', PostViewSet) #comment list볼러면 설정해줘야함..
+router.register('posts', PostViewSet) #comment list볼러면 설정해줘야함..
 
-router.register('comment',CommentViewSet)
+router.register('comments',CommentViewSet)
 
 urlpatterns = [
-
-    # path('', PostList.as_view()),
-    # path('<int:post_id>/', PostDetail.as_view()),
-    # path('comment/', CommentList.as_view()),
-    # path('comment/<int:comment_id>/', CommentDetail.as_view()),
 
     path('', include(router.urls)),
 
