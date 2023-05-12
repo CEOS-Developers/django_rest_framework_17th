@@ -54,7 +54,7 @@ class PostLike(BaseTimeModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_likes')
 
     def __str__(self):
-        return '{}번 게시글에 {}님의 공감'.format(self.post.id, self.user.username)
+        return '{}번 게시글에 {}님의 공감'.format(self.post.id, self.user.nickname)
 
 
 class CommentLike(BaseTimeModel):
@@ -62,7 +62,7 @@ class CommentLike(BaseTimeModel):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='comment_likes')
 
     def __str__(self):
-        return '{}번 댓글에 {}님의 공감'.format(self.comment.id, self.user.username)
+        return '{}번 댓글에 {}님의 공감'.format(self.comment.id, self.user.nickname)
 
 
 class CommentReplyLike(BaseTimeModel):
@@ -70,7 +70,7 @@ class CommentReplyLike(BaseTimeModel):
     comment_reply = models.ForeignKey(CommentReply, on_delete=models.CASCADE, related_name='comment_reply_likes')
 
     def __str__(self):
-        return '{}번 대댓글에 {}님의 공감'.format(self.comment_reply.id, self.user.username)
+        return '{}번 대댓글에 {}님의 공감'.format(self.comment_reply.id, self.user.nickname)
 
 
 class Scrap(BaseTimeModel):
@@ -78,4 +78,4 @@ class Scrap(BaseTimeModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='scraps')
 
     def __str__(self):
-        return '{} 유저가 {}번 게시글 스크랩'.format(self.user.username, self.post.id)
+        return '{} 유저가 {}번 게시글 스크랩'.format(self.user.nickname, self.post.id)

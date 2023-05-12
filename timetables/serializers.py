@@ -13,7 +13,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CourseDetail
-        exclude = ['created_at', 'modified_at']
+        exclude = ['created_at', 'modified_at', 'course']
 
 
 class TimetableSerializer(serializers.ModelSerializer):
@@ -21,13 +21,13 @@ class TimetableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Timetable
-        fields = ['name', 'courses']
+        fields = ['user', 'name', 'courses', 'is_default']
 
 
 class TimetableListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timetable
-        fields = ['id', 'name', 'is_default']
+        fields = ['id', 'user', 'name', 'is_default']
 
 
 class FriendSerializer(serializers.ModelSerializer):

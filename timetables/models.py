@@ -11,7 +11,7 @@ class Timetable(BaseTimeModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='timetables')
     name = models.CharField(max_length=10)
     courses = models.ManyToManyField('CourseDetail', null=True)
-    is_default = models.BooleanField(default=True)
+    is_default = models.BooleanField()
 
     def __str__(self):
         return '{}님의 시간표:{}'.format(self.user.nickname, self.name)
@@ -75,5 +75,5 @@ class Friend(BaseTimeModel):
     is_accepted = models.BooleanField(default=False)
 
     def __str__(self):
-        return 'from user: {}, to user: {}'.format(self.from_user.username, self.to_user.username)
+        return 'from user: {}, to user: {}'.format(self.from_user.nickname, self.to_user.nickname)
 
