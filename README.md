@@ -385,3 +385,89 @@ class IsOwnerOrReadonly(permissions.BasePermission):
 
 
 이번 기회로 로그인 및 사용자 인증에 대해 다시 자세히 복습해 볼 수 있어서 재밌었당!
+
+---
+## [6주차 - AWS EC2, RDS & Docker & Github Actions]  
+
+## ✨Docker Compose✨  
+Docker Compose란?  
+내가 이해한 Docker Compose는 여러 이미지들에 대한 복잡한 run 명령어들을 docker-compose.yml에 작성해서 여러 컨테이너들을 한번에 실행시킬 수 있게 해주는 도구다.  
+
+참고로 `docker-compose.yml` 에서 `expose:` 는 컨테이너의 포트번호를 알려주는 용도이다. 그럼 이게 `ports:` 랑 뭐가 다르지? 궁금해지는 게 당연하다ㅎㅎ  
+둘의 차이점은 `ports:` 는 실제로 **외부**에서 접속할 때 **Host의 포트**와 **컨테이너의 포트**를 매칭시켜주지만, `expose:` 는 **내부**에서 사용되도록 **컨테이너의 포트**만 노출시키는 것이다.  
+
+ ---
+ ## ✨Github Actions의 Secrets✨  
+`.gitignore` 에 `.env.prod` 를 추가하면, 배포할 때는 이 파일이 없어서 환경변수를 사용할 수 없다.  
+그래서 깃허브는 Actions Secrets을 통해 환경 변수를 암호화해서 저장할 수 있는 기능을 제공한다.  
+프로젝트 레포지토리의 [Settings] > [Secrets and variables] > [Actions] 에 들어가서 [New repository secret] 버튼을 눌러 배포할 때 필요한 환경변수들을 추가해주면, Actions가 실행될 때 환경변수 설정 파일이 자동으로 생성되는 것이다.  
+
+---
+## ✨로컬에서 Docker 컨테이너 실행하기✨  
+여러 에러들을 겪었다ㅎㅎ..  
+
+
+에러 1) 로컬에서 `docker-compose -f docker-compose.yml up --build` 로 웹 컨테이너랑 db 컨테이너 실행하려니까  
+`django no module named 'rest_framework_simplejwt` 에러가 났다. Simple JWT 설치는 `requirements.txt` 에 있어서 당연히 자동으로 될줄 알았는데 왜 안되지? 하고 `requirements.txt` 를 다시 봤다.  
+그랬더니,,ㅎ `djangorestframework-jwt==1.11.0` 이게 들어가 있더라ㅎㅎ 그래서 후딱 `djangorestframework-simplejwt==5.2.2` 로 수정해줬다!😎 (처음엔 `Dockerfile` 에 `RUN pip3 install djangorestframework-simplejwt` 를 추가해줬는데 이건 에러가 나더라..)  
+
+에러 2) `ValueError: Related model 'account.myuser' cannot be resolved` ➡️ 구글링해보니 `AUTH_USER_MODEL = 'account.MyUser'` 로 설정한 모델이 가장 먼저 migrate 되어야 하는데 그냥 `python manage.py migrate` 를 하면, 다른 모델이 먼저 migrate 되서 발생하는 에러인것 같았다...  
+그래서 `docker-compose.yml` 안에서 `python manage.py migrate account && [나머지 앱들] ...` 이렇게 바꿨더니 또 이미 만들어진 모델이라는 에러가 나서 이번에는 migrate 하는 코드를 다 지우고 `python manage.py runserver 0.0.0.0:8000` 만 남겼더니 드디어 성공했다..🫠🫠  
+
+
+루트 URL에 아무것도 안만들어놔서 404 에러 페이지가 뜨지만 그래도 접속에 성공했다!  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/f830ae2b-ab6c-40a2-acec-8016552ffe57)  
+
+---
+## ✨실제 배포하기(with AWS, Github Actions, Docker)✨
+### AWS EC2, RDS 구축  
+EC2는 스토리지 크기를 최대인 30Gb로 설정해주고, 탄력적 IP를 할당해줬다.  
+RDS는 MySQL 버전 5.7.41 로 설정해줬다.  
+
+⬇️ EC2에서 RDS에 접속하려면, EC2의 보안그룹ID를 RDS의 보안그룹 인바운드 규칙에 추가해줘야 한다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/4e5c61da-f144-47f0-a114-521e39108b21)  
+
+
+타임존, 인코딩 설정을 위해서 새로운 파라미터 그룹도 생성해줬다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/09db23da-7608-4bf7-af5c-699cf030eeec)  
+
+
+`docker-compose.prod.yml` 에 포트포워딩이 80:80 으로 되어있길래 EC2 인바운드 규칙에 80번(HTTP) 포트도 추가해줬다. (추가로 HTTPS인 443번도 열어줬다.)  
+
+### Github Actions 를 통한 배포  
+에러1) 프로젝트에 `.env.prod` 파일을 만들어주고, Github에 가서 Actions Secrets 설정도 스터디 노션에 있는대로 쭉 진행해줬다. 이후 master 브랜치에 `git push origin shj718:master` 로 push 해줬는데도 workflow가 실행이 안됐다.  
+이유는 `deploy.yml` 에 **dev 브랜치**에 push할 때 자동으로 배포되게 설정되어 있어서였다ㅎㅎ 다시 **master** 브랜치로 수정했다.  
+
+에러2) `docker-compose.prod.yml` 에 `env_file` 설정이 `.env.prod` 가 아닌 `.env` 로 되어있어서 에러가 났다. 고쳐줬다.  
+
+
+다 고쳐주니 잘 빌드 됐다!  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/d7e35fe7-fd50-402c-8448-1e916085f2ea)  
+
+브라우저로 EC2에 접속해보면 서버가 떠있는걸 확인 가능🤗  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/813337f1-ff19-4c41-8e64-eda78c3d24c8)  
+
+### API 요청 보내기  
+JWT 없이 보냈으니 자격 인증 데이터가 없다는 응답이 오는게 당연하다.  
+<img width="632" alt="image" src="https://github.com/shj718/django_rest_framework_17th/assets/90256209/2b30d18b-7536-4d5b-904a-d5b612e1e28d">  
+
+근데 로그인 요청을 보냈더니 500 에러가 났다..  
+<img width="634" alt="image" src="https://github.com/shj718/django_rest_framework_17th/assets/90256209/0d9a5d77-485b-4db0-9f37-c68143a6f42f">  
+
+
+그동안 Spring으로 개발할때 500 Internal Server 에러가 나는건 경험상 8-90% 내 프로젝트 Service단에서 로직이 잘못된 경우였다.  근데 여기선 왜 나는지 모르겠어서 `docker logs --details 050f4c270e9f` 로 로그를 확인해봤다.  
+<img width="946" alt="image" src="https://github.com/shj718/django_rest_framework_17th/assets/90256209/19f5674a-86b2-4959-ac48-4a79a72f9ac2">  
+근데 뜬금없이 
+```  
+ /usr/local/lib/python3.8/site-packages/environ/environ.py:637: UserWarning: Error reading /home/app/web/venv/.env - if you're not configuring your environme
+   warnings.warn(
+```  
+요런 에러 메세지가 나왔다.. 구글링해봤을때 `docker-compose.yml` 과 동일한 위치에 `.env` 파일을 두면 저절로 `docker-compose` 할 때 웹 애플리케이션에 `.env` 파일이 포함되지 않는다고 하던데.. 무슨 일인지 잘 모르겠다.  
+에러 메세지를 복붙해서 구글링해도 똑같은 에러를 겪은 사람이 없어보인다. 그래서 `docker exec` 로 컨테이너 안에 들어가서 이것저것 많이 해봤는데 뭐가 문제인지 아직 모르겠다 하하... 혹시 이 에러의 이유를 아신다면 알려주세요🥲🥲  
+
+---
+## ✨회고✨  
+확실히 도커는 이론으로 공부할때보다 실제 프로젝트에 적용하는게 어렵다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/ee5954b1-db9b-4c8a-9080-35adde77457e)  
+[출처](https://velog.io/@kdh92417/Nginx%EC%99%80-Django-EC2%EC%97%90-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0-feat.-RDS-%EC%83%9D%EC%84%B1-%EB%B0%8F-%EC%97%B0%EA%B2%B0)  
+그래도 이번 기회를 통해 배포 아키텍쳐와 처음 써보는 Github Actions에 대해 공부해봐서 매우매우 유익했다..  
