@@ -66,3 +66,5 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = PostFilter
+
+# deploy test
