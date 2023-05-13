@@ -8,6 +8,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import *
+from rest_framework import permissions
+from account.permissions import IsOwnerOrReadonly
 
 
 # class BoardList(APIView):
@@ -51,11 +53,15 @@ from .filters import *
 
 
 class BoardViewSet(viewsets.ModelViewSet):
+    # permission 추가
+    permission_classes = [IsOwnerOrReadonly]
     serializer_class = BoardSerializer
     queryset = Board.objects.all()
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    # permission 추가
+    permission_classes = [IsOwnerOrReadonly]
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     filter_backends = [DjangoFilterBackend]
