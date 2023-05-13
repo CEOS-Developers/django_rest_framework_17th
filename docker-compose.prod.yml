@@ -10,7 +10,7 @@ services: # container 이름들 작성
     environment: # 환경 설정
       DJANGO_SETTINGS_MODULE: django_rest_framework_17th.settings.prod
     env_file: # 환경 변수 파일 설정
-        - .env
+        - .env.prod
     expose: # container 포트 번호
       - 8000
     volumes: # 데이터 볼륨 매핑
