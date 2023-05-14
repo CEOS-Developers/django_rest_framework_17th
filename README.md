@@ -497,3 +497,12 @@ urlpatterns = [
 - 이제 시험도 끝났고 팀도 정해졌고... 화이팅이다...!!!! 힘내자!
 
 ##[5주차] AWS : EC2, RDS & Docker & Github Action
+- 내용을 다 정리해두었는데... 잘못된 터치로 인해 내용이 다 사라져버려서...ㅠㅜ 이후에 제대로 다시 정리하겠습니다...
+- 미션만 먼저 올릴게요...
+
+### 미션 결과
+
+<img width="1026" alt="스크린샷 2023-05-15 오전 3 56 22" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/e7eecec0-0d4c-4818-939e-c49ac3db94d1">
+<img width="1016" alt="스크린샷 2023-05-15 오전 3 56 51" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/af6be930-8290-4d23-8168-98044ff569ad">
+
+
