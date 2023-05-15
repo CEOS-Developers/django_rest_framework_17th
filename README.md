@@ -556,10 +556,25 @@ sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --buil
 - `ENV_VARS`: .env.pord 에서 설정해주었던 환경변수들을 기입해준다.
 - `HOST`: 배포할 EC2 서버 퍼블릭 DNS(IPv4) 주소를 기입해준다.
 - `KEY`: 배포할 EC2 서버로 접근 가능한 ssh key 전문 (.pem)를 기입해준다.
-<img width="770" alt="스크린샷 2023-05-15 오후 5 27 16" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/447f63f8-33e5-4afe-afd5-4879dd080543">
-- 이제 Dockerfile과 docker-compose.prod.yml 을 환경에 맞게 작성해주고 push를 날려 빌드 상태를 확인한다.
-- 
-### 미션 결과
+<img width="770" alt="스크린샷 2023-05-15 오후 5 27 16" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/447f63f8-33e5-4afe-afd5-4879dd080543"> <br/>
 
+- 이제 Dockerfile과 docker-compose.prod.yml 을 환경에 맞게 작성해주고 push를 날려 빌드 상태를 확인한다.
+<img width="886" alt="스크린샷 2023-05-15 오후 5 29 21" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/86602f6a-6475-4f1a-bc5f-261d00699f7c"> <br/>
+- 초반 몇 번은 build가 제대로 되지 않았다.
+- 이걸 해결하려고 시간이 들었기에 오류 해결과정을 작성했었지만... 리드미가 중간에 한 번 엎어져서 지금 작성하기에는 시간상 여유가 없어 이후 추가 작성할 예정이다..ㅠㅜ
+
+### 미션 결과
+- 사실 빌드가 된 이후에도 여러 문제들이 있어 연결이 잘 되지 않았다.
+- 어찌저찌 겨우겨우 성공해서 다행이었다.
+- 위에서와 마찬가지로 리드미 이슈로 인해 해결 과정을 추후에 작성하도록 하겠다.
 <img width="1026" alt="스크린샷 2023-05-15 오전 3 56 22" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/e7eecec0-0d4c-4818-939e-c49ac3db94d1">
 <img width="1016" alt="스크린샷 2023-05-15 오전 3 56 51" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/af6be930-8290-4d23-8168-98044ff569ad">
+- 아무튼 성공~
+
+### 5. 회고
+- Docker와 GitHub Action 이라는 기능들을 처음 사용해본다.
+- 배포가 익숙하지 않다보니 많이 긴장했고 어려웠지만 그만큼 보람이 있는 것 같다.
+- 자동 재배포를 언젠가 공부해 볼 예정이었는데 이렇게 좋은 환경에서 학습을 진행할 수 있어서 다행이었다.
+- 쉬운 이해를 위해 노션에 Docker와 GitHub Action에 대한 개념과 설정들을 깔끔하게 정리해주시고 레퍼런스들도 첨부해주신 운영진분들께 너무 감사했다.
+- 제일 시간과 정신을 많이 쏟은 과제였던 것 같다... 후 힘들었당..
+- 다음 과제도 화이팅!!!!
