@@ -496,9 +496,20 @@ urlpatterns = [
 - Django에서는 Simple-JWT를 통해 보다 빠르고 간단하게 구현이 가능했던 것 같다.
 - 이제 시험도 끝났고 팀도 정해졌고... 화이팅이다...!!!! 힘내자!
 
-##[5주차] AWS : EC2, RDS & Docker & Github Action
-- 내용을 다 정리해두었는데... 잘못된 터치로 인해 내용이 다 사라져버려서...ㅠㅜ 이후에 제대로 다시 정리하겠습니다...
-- 미션만 먼저 올릴게요...
+## [5주차] AWS : EC2, RDS & Docker & Github Action
+### 기본 개념
+### Docker
+- 가상 컨테이너(소프트웨어 구동 환경)를 생성하고 관리하는 소프트웨어이다.
+- **Docker**는 구축된 환경을 명시한 Dockerfile을 실행시켜줌으로써 하나의 Image(컨테이너를 정의해주는 역할)를 만들게된다.
+- Image에는 컨테이너 실행에 필요한 파일과 설정값 등이 포함되어 있고 상태값을 지니지 않음으로써 언제나 동일한 컨테이너를 형성한다.
+- **Docker compose**는 docker-compose.yml 파일을 실행시켜, 이미지간 네트워크를 구성, 호스트와의 연결 설정, 파일 시스템 공유(volumes) 제어 등의 역할을 해준다.
+- 이러한 이유로 Docker를 사용하면 OS에 관계없이 항상 같은 환경에서 서버가 실행될 수 있는 것이다.
+
+### Nginx
+- Web Server로써 정적인 요청 Application의 WSIG(Web Server Gateway Interface)에 접근하여 전달하는 역할을 한다.
+  (동적인 요청의 경우 WAS(Web Application Server)를 이용한다고 한다.)
+- Python은 WSGI로 Gunicorn을 사용하며, Web Server(Nginx)로부터 요청을 받아 서버 애플리케이션(Django)으로 전달해주는 식으로 동작한다.
+![Untitled](https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/7eada435-0881-4c53-81dd-458a061fafc9)
 
 ### 미션 결과
 
