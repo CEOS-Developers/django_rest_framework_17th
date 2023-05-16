@@ -1,8 +1,11 @@
+from django.contrib.auth import authenticate
 from django.shortcuts import render
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import Comment
 from .serializers import CommentSerializer
 from rest_framework import viewsets
@@ -81,3 +84,24 @@ class CommentDetail(APIView) :
         comments = self.get_object(pk)
         comments.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class Login(APIView):
+
+    def post(self, request):
+        user = authenticate(username=request.data.get("username"), password=request.data.get("password"))
+
+        if user is not None:
+            token = TokenObtainPairSerializer.get_token(user)
+            access_token = token.access_token
+            res = Response(
+                {
+                    "message": "login success",
+                    "token": str(token.access_token)
+                },
+                status=status.HTTP_200_OK,
+            )
+
+            res.set_cookie("access", access_token, httponly=True)
+            return res
+        else:
+            return HttpResponse("target failed")

@@ -4,19 +4,44 @@ services:
   web:
     container_name: web
     #작성
+<<<<<<< HEAD
+    build:
+      context: ./
+      dockerfile: Dockerfile.prod
+    command: gunicorn django_rest_framework_17th.wsgi:application --bind 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: django_rest_framework_17th.settings.prod
+    env_file:
+      - .env
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
+    expose:
+        - 8000
+=======
+    volumes:
+      - static:/home/app/web/static
+      - media:/home/app/web/media
+>>>>>>> f8df29bc6c21a2ed0d53c626be7e9d139865d48f
     entrypoint:
       - sh
       - config/docker/entrypoint.prod.sh
 
   nginx:
     container_name: nginx
+<<<<<<< HEAD
+    build : ./config/nginx
+    volumes:
+      - static:/home/app/web/static
+      - media:/home/app/web/media
+    ports :
+      - "80:80"
+=======
     #작성
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
+>>>>>>> f8df29bc6c21a2ed0d53c626be7e9d139865d48f
     depends_on:
       - web
 
