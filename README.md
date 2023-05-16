@@ -236,3 +236,91 @@ user = authenticate(username=request.data.get("username"), password=request.data
 * JWT
     하지만 세션은 서버의 database를 조회하는 방식으로 서버에 무리를 줄 수 있어서 상태가 존재하지 않는 JWT 토큰을 사용한다.
     이 때 토큰이 탈취 당하게 된다면, 악의적인 사용자에 의해서 지속적으로 사용당할 수 있으므로, 토큰의 유효기간을 짧게 설정해야 한다.
+
+## 5주차 과제 
+
+### 인바운드 규칙
+
+* 인바운드 규칙이라는 것은 외부에서 들어오는 트래픽을 어떻게 처리할 것인지에 대한 규칙이다.
+* 이상적인 ec2 기준으로 인바운드 규칙은 22번 포트는 자신 집 주소로 ip로 설정하고 (현재 대부분 가정집의 ip 주소는 dhcp이기 때문에 ip가 바뀔 수도 있다는 점은 유의하여야 한다.), database 포트는 자신의 rdb 서버만 허용한다.
+* 이후에 rdb의 3306 인바운드 서버는 자신의 ec2 서버와 자신이 사용할 ip 주소만 허용한다.
+
+### sudo docker exec -it 81e6879cb988 python manage.py migrate
+
+* 운영진의 의도는 /config/scripts/deploy.sh에 python manage.py makemigrations && python manage.py makemigrations 를 추가하라는 의도였지만 
+* ec2에서 도커에 들어가서 실행하였다...ㅎㅎ
+* docker를 이용해서 내부에 들어가서 create superuser를 해주어서 로그인을 할 수 있게 하였다.
+
+### RDS 세팅
+
+* rds는 꼭 인터넷에 나와있는 프리티어 세팅을 잘 맞추도록 한다.
+* [링크](https://velog.io/@shawnhansh/AWS-RDSmySql-%ED%94%84%EB%A6%AC%ED%8B%B0%EC%96%B4-%EC%83%9D%EC%84%B1%ED%95%98%EA%B8%B0) 를 참고하면 좋다.
+* 중요한 점은 파라미터 그룹 생성 이후에 rds 재시작을 하여서 파라미터 그룹이 잘 적용되게 해줘야한다. 
+
+### aws 비용 경고
+
+![img.png](image/img.png)
+여기에서 결제 대시 보드를 들어간다.
+
+![img.png](img.png)
+여기에서 Budgets에 들어간다.
+
+![img_1.png](image/img_1.png)
+예산 생성에 들어간다.
+
+![img_2.png](image/img_2.png)
+
+사용자 지정을 -> 비용 예상을 선택한다.
+
+![img_3.png](image/img_3.png)
+
+월별 예산으로 선택한다.
+
+![img_4.png](image/img_4.png)
+## 절대!
+
+![img_5.png](image/img_5.png)
+## 제가 총합 8만원 가량을 날린게 화가 나서 쓴게 아닙니다 ^^
+
+
+aws 비용 경고는 꼭 켜둡시다...
+
+### 도커
+
+[링크](https://subicura.com/2017/01/19/docker-guide-for-beginners-1.html)
+
+위의 글을 보고 처음 시작하기 좋습니다. 
+
+* [링크](https://velog.io/@kshired/Docker-%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%97%90%EC%84%9C-localhost%EC%99%80-%ED%86%B5%EC%8B%A0%ED%95%98%EA%B8%B0)
+* 이번 프로젝트에서는 db 컨테이너를 만들었지만 굳이 localhost에 존재하는 mysql을 사용하는 사람들을 위한 글입니다. 도커는 localhost와 통신할 때 주의를 해서 설정을 하셔야합니다.
+
+### nginx
+
+* nginx는 리버스 포록시 서버, 로드벨런서의 일종으로 사용자가 요청을 하면 해당 요청을 부하를 분산해서 서버에 전달을 해주는 역할을 담당한다.
+
+### 리버스 프록시란?
+
+* 포워드 프록시의 반대말로써 포워드 프록시는 우리가 흔히 생각하는 프록시가 맞다.
+* 그거와 반대로 클라이언트가 특정 서버를 접속할 때 서버 정보를 숨길 수 있다는 장점이 존재한다. 포워드 프록시는 클라이언트의 정보가 숨겨진다.
+* 리버스 프록시는 서버의 정보가 숨겨진다는 점이 차이점이다.
+
+#### 리버스 프록시를 쓰는 이유
+
+* 캐싱
+  * 클라이언트의 요청을 캐싱해서 동일한 요청이 들어오면 그대로 정해진 정보를 내보내 줄 수 있다.ㄴ
+* 보안
+  * 클라이언트들은 진짜 서버에 요청을 하는 것이 아니라, reverse proxy 서버가 진짜 서버 주소라고 생각해서 해당 서버에 요청을 한다.
+* Load balancing
+
+#### 로드 밸런싱
+
+* 로드 밸런싱은 여러 서버에 부하를 분산시켜주는 역할을 한다. 이 과정에서 scale out을 실현할 수 있게 된다. (scale up은 서버 성능을 좋게 만드는 것이고, scale out은 서버를 여러대 구매를 하는 것이다.)
+
+* 로드 밸런싱은 크게 L4와 L7을 사용한다. L4는 port 기반으로 분산을 하고, L7은 http 요청을 기반으로 분산을 한다.
+
+### 궁금한점 
+
+* [링크](https://velog.io/@hax0r/AWS-ECSECR-%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%84%9C%EB%B9%84%EC%8A%A4-%EB%B0%B0%ED%8F%AC#codepipeline)
+* ecs를 이용해서 도커를 배포하는 것이, ec2에서 코드를 동기화 시켜서 도커를 빌드해서 배포하는 것에 비해서 어떤 장점을 가지는지 의문
+* 아는 분들 코멘트 좀여...
+* 친구한테 물어보니 ecr을 사용하면 이미지 빌드가 1번만 일어나서 좋고, 이미지가 잘못 되었을 경우, 이미지 자체를 롤백해서 실행하는 것이 가능해서 좋다고 했음
