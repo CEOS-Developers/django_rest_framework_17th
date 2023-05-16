@@ -162,3 +162,142 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 - 지난 과제에서 구현한 회원가입 및 로그인이 잘 작동한다.
 
 ## 실 환경 배포
+
+- AWS EC2, RDS 를 만들었다.
+- 돈 나갈까 무서웠지만 잘 한것 같다.
+
+#### Elastic IP Allocation
+
+- 탄력적 IP를 설정하지 않으면 일정 시간마다, 혹은 서버를 껐다킬 때 IP가 바뀌어버린다.
+- 그럴때마다 깃헙 secret의 HOST도 수정하고, env파일도 수정하고, 그러는건 너무너무 귀찮다.
+- 돈이 나가긴 하지만,, 설정해주도록 하자.
+
+## 흐름부터 알자
+
+- Github Action의 `deploy.yml`가 가장 먼저 실행된다.
+- 여러개 실행하다가 `config/scripts/deploy.sh`를 실행한다.
+  - (executing remote ssh commands using password)가 실행
+- `deploy.sh`는 `docker-compose.prod.yml`을 실행한다.
+- `docker-compose.prod.yml`은 `Dockerfile.prod`를 실행한다.
+
+## Github Action
+
+- Github Action을 사용해서 자동으로 배포되도록 설정했다.
+- dev branch에서 Action을 취하도록 설정되어있다.
+- master도 추가했는데 그냥 dev 브랜치를 따로 파는게 좋을 것 같아서 다시 삭제했다.
+
+- 깃헙 액션 에러:
+
+#### err: Couldn't find env file: /home/ubuntu/srv/ubuntu/.env.prod
+
+- .env.prod 파일이 없다고 한다.
+
+``` yml
+      run: |
+        touch .env.prod
+        echo "${{ secrets.ENV_VARS }}" >> .env.prod
+```
+- 깃헙 액션의 `deploy.yml` 을 다음과 같이 수정하니 고쳐졌다. 유후
+
+#### ERROR: Failed building wheel for Pillow
+
+- 너네 에러나고 싶은 거 있으면 얼마든지 해 난 괜찮어
+
+``` 
+RUN pip3 install --upgrade pip setuptools wheel
+```
+- `Dockerfile.prod`에 위 코드를 추가했다. (requirements 깔기 전에 넣어야 한다.)
+
+#### ERROR: Pillow-9.5.0-cp38-cp38-musllinux_1_1_x86_64.whl is not a supported wheel on this platform.
+
+- 그래도 에러가 바뀌었다. ㅎㅎ
+- 단순한 Pillow 버전 충돌 문제이다.. 우분투에 맞는 Pillow를 찾는다.
+- 내 해결방법:  `deploy.sh`에 다음 코드를 추가한다:
+
+``` shell
+sudo apt-get install python3-dev python3-setuptools
+sudo apt-get install libtiff5-dev libjpeg8-dev libopenjp2-7-dev zlib1g-dev \
+    libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python3-tk \
+    libharfbuzz-dev libfribidi-dev libxcb1-dev
+```
+- `Dockerfile.prod`에 다음 코드를 추가한다:
+```
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pillow
+```
+- 그다음 requirements.txt에 Pillow를 삭제한다. (이미 설치했으므로)
+
+![image](https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/10279b32-21bd-422d-8208-06e2a70aaee8)
+
+- 난 무엇이든 해내
+
+##### 502 Bad Gateway
+
+- nginx에러다.
+
+<img width="1159" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/c8f0e231-71ed-4c82-ac9c-83c8cc9fd6bf">
+
+<img width="1181" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/d32b9741-82ef-4071-b24f-ca3699d67114">
+
+- 그러다가 accounts/register/로 get요청을 했는데 DRF페이지가 나왔다(!!)
+- 그럼 혹시 DB와의 연결설정에 문제가 있는거 아닐까 싶어 확인해봤다.
+- 그럼 그렇지 보안그룹과 관련된 오류였다. 포트 22, 80, 3306 요놈들 적절히 열어주어야 한다.
+
+##### MySQL Data Import error (ERROR 1049 (42000): Unknown database 'DB명')
+
+- DB에 스키마를 만들지 않아서 생긴 오류다.
+
+> create schema DB이름;
+
+
+##### ERROR 1146, "Table doesn't exist"
+
+- 이제 이게 마이그레이션 오류이다.
+- 내 파이참에서 .env파일을 수정해 RDS에 접근했다.
+  - 단순히 .env.prod를 복붙하면 된다.
+- 마이그레이션 후 테이블이 생긴걸 확인했다.
+
+<img width="1001" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/ebb11b80-6a0e-4939-9daa-359e00555c44">
+
+- 난 무엇이든 해내
+
+
+## Connect Server with SSH (Terminal)
+
+- 매 변경마다 깃헙에 push해서 액션을 기다리는 것은 따분한 일이다.
+- 게다가 이런식으로 하면 내가 로그를 확인할 수 없다. 모든 디버깅의 시작은 로그 확인이다.
+- 난 맥을 쓰니까 윈도우는 모른다. 맥으로 접속, 제어하는 방법을 알아보자.
+
+### 명령어들
+
+- `ssh -i {key.pem} {server주소}` 로 접속할 수 있다.
+- `sudo su`: root 계정으로 접속한다.
+- `docker ps`: 도커 컨테이너를 확인한다. 16b784c529c5 이렇게 생긴게 우리가 만든 web과 nginx이다.
+- `docker stop {container id}`: 도커 컨테이너를 종료한다.
+- `sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build`: 도커 컴포즈를 실행한다.
+  - `-d`는 뺐다. 터미널에서 로그를 직접 확인하기 위함이다. 백그라운드로 실행하면 의미가 없다..
+
+<img width="944" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/26433318-6cb7-499c-ae9d-4721c113ed20">
+
+- 이제 터미널에서 로그를 확인할 수 있다. (이걸로 디버깅을 해야한다.)
+- 아무튼 배포 성공~!
+
+# 후기
+
+- 이제 HTTP STATUS는 저에게 도전과제 같은 느낌입니다.. 저는 499 에러 도전과제도 달성(?)했는데 여러분들은 어디까지 달성해봤나요
+- 디버깅의 난이도가 높았습니다. 문제의 원인을 찾는 일이 쉽진 않았습니다.
+- nginx나 docker compose나.. 여러가지 새로운 개념을 한꺼번에 다루어서 그랬던 것 같습니다.
+- 지금까지 한 과제 중 저에게 가장 유익한 과제였습니다. 감사합니다. 
+
+# 추가 : .env.prod에 관하여..
+
+- 과거 커밋에 `.env.prod`가 올라가버렸다 ^^.. .env 관련 파일이라 자동으로 gitignore 해줄 줄 알았다.. 방심했다 
+- 머지되어버려서 되돌리기도 애매하여 그냥 RDS를 다시 팠다.
+
+<img width="1073" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/750aeabd-f102-499a-a643-dac5ffbb1651">
+
+- 세팅도 다 다시 해준다.
+- EC2도 처음에 리눅스로 만들어서 다시 만들었었는데.. 몇 번 만들다보니 이제 튜토리얼 안보고 걍 만들 수 있게 되었다. 하하 
+- 아무튼 머리가 나쁘면 몸이 고생을 한다.
+- !!절대!! 노출하지 말자. 누군가 재미삼아 요금 폭탄을 떨궈버릴지 모른다..
+
