@@ -75,7 +75,7 @@ class SignIn(APIView):
             )
 
 
-class Logout(APIView):
+class SignOut(APIView):
     def post(self, request):
         response = Response({
             "message": "Logout success"

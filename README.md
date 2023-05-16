@@ -787,134 +787,459 @@ Postman에서 새로운 environments를 추가했고
 저번 과제에서 ViewSet 리팩토링에서 났던 오류들을 수정하는 것이 조금 힘들었지만,
 JWT로 인증 구현하는 것은 재미있었다!
 
-### 1. 서비스 설명
+<br>
 
-#### (1) 에브리타임의 모든 기능을 파악해 모델을 작성하지는 못 했지만, 유저, 커뮤니티, 시간표 기능의 모델들을 구현하였다
-  - 유저는 회원가입시 학교를 선택할 수 있다
-  - 학교 별로 게시판들이 따로 존재하며 각 게시판에 게시글을 작성할 수 있다
-  - 게시글에 댓글, 대댓글도 작성 및 공감 할 수 있다
-  - 필요한 게시글을 스크랩하여 확인할 수 있다
-  - 시간표를 만들 수 있으며 친구의 시간표도 확인할 수 있다
-  
-  ![everytime (2)](https://user-images.githubusercontent.com/77063375/229275237-279b9792-555f-4ad4-8f53-277dc2f93771.png)
+# CEOS 백엔드 스터디 - 5주차
 
-#### (2) 구현 모델
-  - 유저 기본 정보: User, School
-  - 커뮤니티 기능: Board, Post, Comment, CommentReply, PostLike, CommentLike, CommentReplyLike, Scrap
-  - 시간표 기능: Timetable, TimetableCourse, CourseDetail, Course, Friend
+> 이번 미션은 Django 서버를 Docker와 GitHub Action으로 배포하는 것이었다
+배포 아키텍처에 대한 이론을 정리하고 실습 내용을 간단하게 정리해보겠다!
 
-<br></br>
+<br>
 
-### 2. 미션 결과
+## 1. Django 서버 배포 아키텍처
 
-<img width="1470" alt="Screen Shot 2023-04-01 at 4 44 18 PM" src="https://user-images.githubusercontent.com/77063375/229275366-0523ef50-3f6b-4c1e-83d1-1ac4aa947e89.png">
+![](https://velog.velcdn.com/images/haen/post/07bad44d-0c57-400f-a24e-83a43d7303d0/image.png)
 
-#### (1) 데이터베이스에 해당 모델 객체 3개 이상 넣기: 
-user를 ForeignKey로 연결하여 timetable 객체를 3개 만들었다
-#### (2) 삽입한 객체들을 쿼리셋으로 조회해보기 (단, 객체들이 객체의 특성을 나타내는 구분가능한 이름으로 보여야 함):
-`Timetable.objects.all()` 로 만들어진 Timetable 객체들을 조회해보았다
-#### (3) filter 함수 사용해보기:
-`Timetable.objects.filter(user__nickname=”haen-su”)`로 유저의 닉네임으로 timetable을 조회해보았다
+### (1) WSGI란?
+`WSGI`는 `Web Server Gateway Interface`의 약자로(위스키라고 읽음), Web Server가 요청받은 정보를 Application에 전달하는 역할을 한다
 
-<br></br>
+Web Server는 Client의 정적인 요청을 처리하는 프로그램이며, 대표적으로 `Apache`, `Nginx`가 있다
 
-### 3. 겪은 오류와 해결 과정
-#### (1) AbstractUser 상속 후 makemigration 오류
-  - Django에서 기본으로 제공하는 User 모델을 확장하기 위한 방법은 3가지가 있다
-    - 기본 User 모델을 OneToOneField 방식으로 연결하여 확장
-    - AbstractUser 상속
-    - AbstractBaseUser 상속
-  - AbstractBaseUser를 상속받는 것이 가장 User 모델 필드를 자유롭게 구성할 수 있지만, 이 미션에서는 간단하게 OneToOneField 방식이나 AbstractUser를 상속 받으려고 하였다
-  - 찾아보니 OneToOneField 방식이 가장 간단하지만 추가 쿼리를 발생시키는 문제점이 있다고 한다
-  - 그래서 AbstractUser를 상속하는 User 모델을 작성하였다
-            
-```python
-  from django.contrib.auth.models import AbstractUser
-            
-  class User(AbstractUser, BaseTimeModel):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='users')
-    nickname = models.CharField(max_length=10, unique=True)
-            
-    def __str__(self):
-      return self.nickname
+만약 Client로부터 동적인 요청이 들어오면 `Web Application Server(WAS)`에요청을 위임하고, 요청에 대한 응답을 `Web Server`로 보낸다
+
+이때 파이썬 애플리케이션(파이썬 스크립트)가 Web Server와 통신하기 위한 인터페이스가 `WSGI`이다
+
+<br>
+
+### (2) Gunicorn이란?
+
+`Gunicorn`은 Python WSGI로, Web Server(Nginx)로부터 요청을 받아 서버 애플리케이션(Django)으로 전달해주는 역할을 수행한다
+
+Django의 `runserver` 역시 똑같은 역할을 수행하지만, 보안과 성능상의 이유로 production 환경에서는 사용할 수 없다고 한다
+
+
+<br>
+
+## 2. Docker
+### (1) 컨테이너(Container)란?
+
+컨테이너는 애플리케이션을 관련 라이브러리 등과 함께 패키지로 묶어 소프트웨어 구동을 위해 만들어진 환경이다 이를 프로세스의 자원을 격리한다고 말한다
+즉 OS 레벨의 가상화 기술인 것이다
+
+컨테이너들은 하나의 운영체제를 공유해서 사용하지만, 컨테이너 각각은 독립된 프로세스와 메모리 영역을 사용한다
+
+<br>
+
+### (2) Docker란?
+
+도커(Docker)는 컨테이너(Container)를 관리하고 다루는 소프트웨어다
+즉, 도커는 컨테이너 기반의 오픈소스 가상화 플랫폼이라고 볼 수 있다
+
+Docker를 사용하면 OS에 관계없이 항상 같은 환경에서 서버가 실행되게 도와준다
+
+<br>
+
+### (3) Image란?
+
+`Docker`에서 `Image`는 컨테이너를 정의하는 읽기 전용 템플릿이다
+`Image`는 컨테이너 실행에 필요한 파일과 설정값 등을 포함하고 있고, 상태값을 가지지 않고 변하지 않는다
+그렇기 때문에 이 이미지를 이용한다면 언제든지 동일한 컨테이너를 만들 수 있다
+
+
+> `Image`는 `Container`의 스냅샷(snapshot)
+`Container`는 `Image`의 한 인스턴스(instance)
+라고 생각하자
+
+<br>
+
+### (4) Docker Compose
+
+`Docker compose`란 이미지를 여러 개 띄워서 이미지간 네트워크도 만들어주고 컨테이너의 밖의 호스트와도 어떻게 연결할지, 파일 시스템은 어떻게 공유할지(volumes) 제어해주는 기술이다
+
+> 쉽게 `Docker`는 `Dockerfile`(서버 운영 기록을 코드화한 것)을 실행시켜주고 `docker-compose`는 `docker-compose.yml` 파일을 실행시켜준다고 생각하자!
+
+
+<br>
+
+## 3. 로컬 환경에서 Docker 실행
+
+로컬 환경에서 Docker를 실행시켜 서버를 띄우기 위해
+Dockerfile과 docker-compose.yml 파일을 작성해준다
+
 ```
-  - 하지만 makemigrations 명령어 실행시 다음과 같은 오류가 발생하였다
-<img width="1492" alt="Untitled" src="https://user-images.githubusercontent.com/77063375/229275529-cb8773c7-fa71-4c00-ab27-9e653d438d89.png">
-            
-  - 찾아보니 기본 User 모델을 명시해주지 않아서 발생한 오류
-  - [setting.py](http://setting.py) 에 `AUTH_USER_MODEL = 'api.User'` 추가로 해결하였다
-#### (2) AbstractUser 상속 후 createsuperuser 오류
-  - makemigrations 문제를 해결하여 migration을 DB에 정상적으로 반영함
-  - 이후 서버를 실행하고, 관리자 페이지를 생성하기 위해 `python manage.py createsuperuser` 명령어를 실행하니 IntegrityError에서 School 모델의 school_id 필드가 null이 될 수 없다는 오류가 발생하였다
-  - 계속 찾아보니 AbstractUser 모델을 상속 받으면서 생긴 문제인 것 같아 DB 초기화, migration 초기화 등 여러 방법으로 해결하려고 시도해보았으나 해결하지 못 해서 결국 OneToOneField로 User 모델을 확장하는 방법으로 바꾸었다 …
-    
-<br></br>
+# Dockerfile
 
-### 4. 새롭게 배운 점
+FROM python:3.8.3-alpine
+ENV PYTHONUNBUFFERED 1
 
-- ManyToManyField를 사용하여 모델을 다대다 관계로 연결하면 Django가 자동으로 중간 테이블을 만들어 다대다 관계를 풀어준다
-- ORM 문법: `Timetable.objects.filter(user__nickname="haen-su")` 이와 같이 외래키로 연결된 필드의 값으로 filter 명령어를 사용하려면 언더바 두 개를 사용해야한다
-- 클래스 내에 `Meta` 라는 클래스를 선언하여 모델의 속성을 정의할 수 있음 본 미션에서는 `abstract=True`를 통해 추상클래스라는 것을 명시해준다
-- choices 기능을 통해 선택지를 추가할 수 있다
-    
-    ```python
-    class CourseDetail(BaseTimeModel):
-        MON = '월'
-        TUE = '화'
-        WED = '수'
-        THU = '목'
-        FRI = '금'
-        SAT = '토'
-        SUN = '일'
-    
-        DAY_CHOICES = [
-            (MON, '월'),
-            (TUE, '화'),
-            (WED, '수'),
-            (THU, '목'),
-            (FRI, '금'),
-            (SAT, '토'),
-            (SUN, '일')
-        ]
-    
-        # 1~15교시 선택
-        TIME_CHOICES = [
-            (1, 1),
-            (2, 2),
-            (3, 3),
-            (4, 4),
-            (5, 5),
-            (6, 6),
-            (7, 7),
-            (8, 8),
-            (9, 9),
-            (10, 10),
-            (11, 11),
-            (12, 12),
-            (13, 13),
-            (14, 14),
-            (15, 15)
-        ]
-    
-        course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_details')
-        course_code = models.CharField(max_length=10)
-        day = models.CharField(max_length=3, choices=DAY_CHOICES)
-        time = models.IntegerField(choices=TIME_CHOICES)
-        hours = models.IntegerField(default=1)
-        classroom = models.CharField(max_length=10)
-    
-        def __str__(self):
-            return self.course_code
-    ```
-    
-<br></br>
+RUN mkdir /app
+WORKDIR /app
 
-### 5. 회고
-    
-    Django로 처음 직접 에브리타임 모델링을 해 보았다
-    
-    평소에는 당연하게 생각했던 기능들인데, 실제로 모델링을 하려니 굉장히 많은 기능들이 있고 복잡하다는 것을 깨달았다
-    
-    시간적 여유가 부족하여 구체적으로 구현하지는 못 한 게 아쉽다
-    
-    이번 미션을 진행하면서 조금이나마 Django에 익숙해질 수 있었다
+# dependencies for psycopg2-binary
+RUN apk add --no-cache mariadb-connector-c-dev
+RUN apk update && apk add python3 python3-dev mariadb-dev build-base && pip3 install mysqlclient && apk del python3-dev mariadb-dev build-base
+
+
+# By copying over requirements first, we make sure that Docker will cache
+# our installed requirements rather than reinstall them on every build
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r requirements.txt
+
+# Now copy in our code, and run it
+COPY . /app/
+```
+
+Dockerfile은 하나의 이미지를 만들기 위한 과정이다
+`RUN pip install -r requirements.txt` 명령어를 통해 Docker로 띄운 환경에 라이브러리들을 설치한다
+
+
+```yml
+# docker-compose.yml
+
+version: '3'
+services:
+
+  db:
+    container_name: db
+    #image: mysql:5.7 #window
+    image: mariadb:latest #mac
+    restart: always
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: mysql
+    expose:
+      - 3306
+    ports:
+      - "3307:3306"
+    env_file:
+      - .env
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  web:
+    container_name: web
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      MYSQL_ROOT_PASSWORD: -
+      DATABASE_NAME: mysql
+      DATABASE_USER: 'root'
+      DATABASE_PASSWORD: -
+      DATABASE_PORT: 3306
+      DATABASE_HOST: db
+      DJANGO_SETTINGS_MODULE: django_rest_framework_17th.settings.dev
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+volumes:
+  app:
+  dbdata:
+  
+```
+
+`docker-compose -f docker-compose.yml up --build` 명령어를 통해 로컬에서 docker를 실행시켜 서버를 띄우고 db를 연결한다
+
+![](https://velog.velcdn.com/images/haen/post/964a8a08-915a-4bdb-8d84-fe0b4741460f/image.png)
+
+서버가 잘 띄워지는 모습이다!
+
+<br>
+
+## 4. 실 환경에서 서버 배포
+
+### (1) EC2 생성
+AWS EC2와 RDS를 사용하여 배포할 것이다
+EC2와 RDS를 생성하고 연결하는 과정은 velog 이전 포스팅에 잘 정리해놓았으니 간단하게만 설명하겠다
+
+EC2를 생성할 때 가장 중요한 보안그룹 설정!
+![](https://velog.velcdn.com/images/haen/post/5e81091c-dbda-4a6f-a22e-8ee40f20a278/image.png)
+
+ssh(22), HTTP(80), HTTPS(443), Django(8000)을 인바운드 보안 그룹 규칙으로 추가해준다
+보통 ssh 접속은 보안상의 이유로 내 아이피만 접속 허용하게 설정해두는 것이 좋다 나중에 바꿀 수 있으니 일단 모든 접속을 허용해놓았다
+
+
+![](https://velog.velcdn.com/images/haen/post/e24c9366-1c58-4fb0-8d6a-1124b8f0c46d/image.png)
+
+EC2 생성 완료 후 터미널로 접속해보았다
+환경변수 설정을 통해`ssh 설정한 명령어` 만을 통해 터미널로 EC2에 접속 가능하게 설정해두었다
+
+자세한 설정은 [이전 포스팅](https://velog.io/@haen/ServerAWS-AWS%EB%A5%BC-%ED%86%B5%ED%95%9C-Spring-Boot-%EC%84%9C%EB%B2%84-%EB%B0%B0%ED%8F%AC1)을 참고하자!
+
+<br>
+
+### (2) RDS 생성
+
+![](https://velog.velcdn.com/images/haen/post/32deea38-4477-44de-9691-09a405bec964/image.png)
+
+AWS RDS를 설정하고 앞서 만든 EC2와 연결한 후 EC2에 접속하여 테스트해보았다
+
+![](https://velog.velcdn.com/images/haen/post/c878979a-e8d4-42eb-b588-44ac59aaa961/image.png)
+
+이렇게 mysql workbench랑도 연결해주었당
+
+<br>
+
+### (3) Dockerfile.prod, docker-compose.prod.yml 파일 작성
+
+로컬 환경과 다르게 ec2 실 배포 환경은 다르기 때문에 파일을 나누어 상황에 맞게 사용해야한다
+
+
+```
+# Dockerfile.prod
+# BUILDER #
+###########
+
+# pull official base image
+FROM python:3.8.3-alpine as builder
+
+# set work directory
+WORKDIR /usr/src/app
+
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install psycopg2 dependencies
+RUN apk update && apk add python3 python3-dev mariadb-dev build-base && pip3 install mysqlclient
+
+# install dependencies
+COPY ./requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+
+
+#########
+# FINAL #
+#########
+
+# pull official base image
+FROM python:3.8.3-alpine
+
+# create directory for the app user
+RUN mkdir -p /home/app
+
+# create the app user
+RUN addgroup -S app && adduser -S app -G app
+
+# create the appropriate directories
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/static
+RUN mkdir $APP_HOME/media
+WORKDIR $APP_HOME
+
+# install dependencies
+RUN apk update && apk add libpq
+RUN apk update \
+    && apk add --virtual build-deps gcc python3-dev musl-dev \
+    && apk add --no-cache mariadb-dev
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
+RUN pip install mysqlclient
+RUN pip install --no-cache /wheels/*
+RUN apk del build-deps
+
+# copy entrypoint-prod.sh
+COPY ./config/docker/entrypoint.prod.sh $APP_HOME
+
+# copy project
+COPY . $APP_HOME
+
+# chown all the files to the app user
+RUN chown -R app:app $APP_HOME
+
+# change to the app user
+USER app
+```
+
+```yml
+# docker-compose.prod.yml
+version: '3'
+services:
+
+  web:
+    container_name: web
+    build:
+      context: ./
+      dockerfile: Dockerfile.prod
+    command: gunicorn django_rest_framework_17th.wsgi:application --bind 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: django_rest_framework_17th.settings.prod
+    env_file:
+      - .env
+    volumes:
+      - static:/home/app/web/static
+      - media:/home/app/web/media
+    expose:
+      - 8000
+    entrypoint:
+      - sh
+      - config/docker/entrypoint.prod.sh
+
+  nginx:
+    container_name: nginx
+    build: config/nginx
+    volumes:
+      - static:/home/app/web/static
+      - media:/home/app/web/media
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+
+volumes:
+  static:
+  media:
+
+```
+
+<br>
+
+### (4) deploy.sh
+
+브랜치에 코드가 푸쉬되면 GitHub Action이 자동으로 deploy.sh를 실행해준다
+
+```shell
+# deploy.sh
+
+#!/bin/bash
+
+# Installing docker engine if not exists
+if ! type docker > /dev/null
+then
+  echo "docker does not exist"
+  echo "Start installing docker"
+  sudo apt-get update
+  sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+  sudo apt update
+  apt-cache policy docker-ce
+  sudo apt install -y docker-ce
+fi
+
+# Installing docker-compose if not exists
+if ! type docker-compose > /dev/null
+then
+  echo "docker-compose does not exist"
+  echo "Start installing docker-compose"
+  sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+fi
+
+echo "start docker-compose up: ubuntu"
+sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build -d
+```
+
+`sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build -d`
+deploy.sh의 마지막 명령어이다
+결국 이 명령어를 실행시키는 것이 목적!
+- `up`: docker-compose 파일(f 파라미터가 가리키는)에 정의된 모든 컨테이너를 띄우라는 명령어
+- `--build`: up할때마다 새로 build를 수행하도록 강제하는 파라미터
+- `-d`: daemon 실행
+
+<br>
+
+### (5) GitHub Actions
+
+깃허브 레포지토리에 필요한 secret들을 설정해주고
+코드 푸쉬를 하면 자동으로 `deploy.yml`을 통해 `deploy.sh`가 실행되고 서버가 띄워진다
+
+```yml
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@master
+
+    - name: create env file
+      run: |
+        touch .env
+        echo "${{ secrets.ENV_VARS }}" >> .env
+    - name: create remote directory
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.KEY }}
+        script: mkdir -p /home/ubuntu/srv/ubuntu
+
+    - name: copy source via ssh key
+      uses: burnett01/rsync-deployments@4.1
+      with:
+        switches: -avzr --delete
+        remote_path: /home/ubuntu/srv/ubuntu/
+        remote_host: ${{ secrets.HOST }}
+        remote_user: ubuntu
+        remote_key: ${{ secrets.KEY }}
+
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.KEY }}
+        script: |
+          sh /home/ubuntu/srv/ubuntu/config/scripts/deploy.sh
+```
+
+`dev` 브랜치에 코드가 푸쉬되면 deploy.yml이 실행되므로 `dev` 브랜치를 새로 만들어주었다
+
+<br>
+
+### (6) 결과
+
+![](https://velog.velcdn.com/images/haen/post/87cbad66-ead0-4df8-a3dc-3a11cb70f1e5/image.png)
+
+![](https://velog.velcdn.com/images/haen/post/ce625cd1-6dc7-48c3-a81e-2e3d2942aa96/image.png)
+
+![](https://velog.velcdn.com/images/haen/post/57014f73-4544-4999-ab2d-39b6a7288579/image.png)
+
+api 테스트까지 완료 잘 돌아간당~
+
+
+<br>
+
+## 5. 겪은 오류
+
+- Server 500
+`sudo docker logs --tail 20 -f 실행되고 있는 docker 컨테이너 ID`
+명령어를 통해 에러 로그를 확인했더니
+migrate 명령어 추가하는 거 까먹었다 ㅎ
+ec2 접속한 김에 그냥 바로 migrate 해주었다 헤헤...;;
+
+
+<br>
+
+## 6. 최종 배포 아키텍처
+
+![](https://velog.velcdn.com/images/haen/post/d16089d0-4c9d-43de-8824-5726fbd776f6/image.png)
+
+직접 그려보았다 맞나요...?
+
+<br>
+
+## 7. 회고
+
+EC2, RDS, GitHub Actions를 통한 서버 배포와 CD는 이전 프로젝트 배포에서 해보아서 이해하는 것에 크게 어려움은 없어서 수월하게 한 것 같다
+이번 미션을 통해 Container와 Docker에 대해 조금 알게 되었다 더 공부해봐야겠당
+
+
+<br>
+
