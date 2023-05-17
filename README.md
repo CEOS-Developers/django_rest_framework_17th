@@ -1,4 +1,4 @@
-# CEOS 17기 백엔드 스터디
+q# CEOS 17기 백엔드 스터디
 
 ## [2주차 미션] 에브리타임 기능 구현하기
 
@@ -495,3 +495,86 @@ urlpatterns = [
 - 또 이전 프로젝트에서 스프링부트 시큐리티를 공부하며 진행했던 내용이라서 더 그랬던 것 같다.
 - Django에서는 Simple-JWT를 통해 보다 빠르고 간단하게 구현이 가능했던 것 같다.
 - 이제 시험도 끝났고 팀도 정해졌고... 화이팅이다...!!!! 힘내자!
+
+## [5주차] AWS : EC2, RDS & Docker & Github Action
+### 1. 기본 개념
+### Docker
+- 가상 컨테이너(소프트웨어 구동 환경)를 생성하고 관리하는 소프트웨어이다.
+- **Docker**는 구축된 환경을 명시한 Dockerfile을 실행시켜줌으로써 하나의 Image(컨테이너를 정의해주는 역할)를 만들게된다.
+- Image에는 컨테이너 실행에 필요한 파일과 설정값 등이 포함되어 있고 상태값을 지니지 않음으로써 언제나 동일한 컨테이너를 형성한다.
+- **Docker compose**는 docker-compose.yml 파일을 실행시켜, 이미지간 네트워크를 구성, 호스트와의 연결 설정, 파일 시스템 공유(volumes) 제어 등의 역할을 해준다.
+- 이러한 이유로 Docker를 사용하면 OS에 관계없이 항상 같은 환경에서 서버가 실행될 수 있는 것이다.
+
+### Nginx
+- Web Server로써 정적인 요청 Application의 WSIG(Web Server Gateway Interface)에 접근하여 전달하는 역할을 한다.
+  (동적인 요청의 경우 WAS(Web Application Server)를 이용한다고 한다.)
+- Python은 WSGI로 Gunicorn을 사용하며, Web Server(Nginx)로부터 요청을 받아 서버 애플리케이션(Django)으로 전달해주는 식으로 동작한다.
+
+![Untitled](https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/7eada435-0881-4c53-81dd-458a061fafc9)
+
+### GitHub Action
+- 브랜치에 코드가 푸쉬되면 자동으로 deploy.sh를 실행시켜 편리하게 재배포가 가능하도록 도와주는 기능이다.
+- 여기서는 deploy.sh를 실행시켜줌으로써 Docker와 Docker-compose를 깔아주고
+- deploy.sh 내의 코드(아래)를 실행시켜줌으로써 서버가 build되고 실행될 수 있도록 해준다.
+<pre><code>
+sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build -d
+</code></pre>
+- `up`: docker-compose 파일(f 파라미터가 가리키는)에 정의된 모든 컨테이너를 띄우라는 명령어이다.
+- `--build`: up할때마다 새로 build를 수행하도록 해준다.
+- `-d`: daemon 실행 (붙이면 background에서 docker-compose가 돌고요, 아니면 터미널 창에서 계속 뜨고 있다.)
+
+### 2. 로컬 환경에서 도커 실행해보기
+- 우선 Docker를 설치한 후 Dockerfile과 docker-compose.yml을 환경에 맞게 작성해준다.
+- 이후 `docker-compose -f docker-compose.yml up --build`를 통해 서버와 db 실행시킨다.
+
+<img width="798" alt="스크린샷 2023-05-15 오후 5 07 49" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/99ef2e40-7d1f-4a58-a4a8-1e3152ee7467"> <br/>
+
+- 서버가 정상적으로 올라온 모습을 확인할 수 있었다.
+
+### 3. EC2와 RDS 생성하기
+### EC2
+- OS는 Ubuntu를 설정해주었다.
+- 프리티어를 사용할 것이므로 t2.micro 유형을 인스턴스 유형으로 선택해주었고 키페어를 생성해주었다. (키페어는 꼭 안전한 곳에 위치시켜주자)
+- 그 외에는 모두 기본으로 설정해주었다. (참고로 스토리지의 경우 프리티어에서 사용할 수 있는 최대치는 20이니까 주의하자)
+- EC2의 보안그룹으로 ssh(22), HTTP(80), HTTPS(443), Django(8000)을 인바운드 규칙으로 추가해준 모습이다. (실수로 IPv6를 추가했는데 이후 수정할 예정이다.)
+<img width="1130" alt="스크린샷 2023-05-15 오후 5 15 44" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/845db42e-81d2-4a13-b38c-b7dc830c2cfb">
+
+### RDS
+- DATABASE로 Mysql을 선택해주었다.
+- 이후 GitHub Action에서의 환경변수 설정을 위해 인스턴스 식별자, 마스터 사용자 이름, 마스터 암호를 꼭 기입하고 기억해주어야한다.
+- 스토리지 크기는 최솟값 20GiB로 설정하고 자동 조정 활성화도 꼭 해지주도록 하자.
+- 퍼블릭 IP 주소를 할당을 위해 퍼블릭 엑세스는 허용해주도록 한다.
+- 이후 다른 설정들은 기본으로 한 것 같다.
+- RDS 또한 보안그룹을 설정해주는데 EC2와의 연결을 위해 EC2에서의 보안그룹을 받아와준다. 추가로 3306 포트에 대한 인바운드 규칙을 추가한 모습이다.
+<img width="1145" alt="스크린샷 2023-05-15 오후 5 23 42" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/0da86b92-a276-4fa5-bc20-95e0480114f1">
+
+<br/>
+
+### 4. GitHub Action 설정해주기.
+- 이제 GitHub Action에 환경 변수들을 등록시켜주고 push를 날려 빌드되는 모습을 확인할 차례이다.
+- Action 탭의 Github Secrets에 필요한 값들을 설정해준다.
+- `ENV_VARS`: .env.pord 에서 설정해주었던 환경변수들을 기입해준다.
+- `HOST`: 배포할 EC2 서버 퍼블릭 DNS(IPv4) 주소를 기입해준다.
+- `KEY`: 배포할 EC2 서버로 접근 가능한 ssh key 전문 (.pem)를 기입해준다.
+<img width="770" alt="스크린샷 2023-05-15 오후 5 27 16" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/447f63f8-33e5-4afe-afd5-4879dd080543"> <br/>
+
+- 이제 Dockerfile과 docker-compose.prod.yml 을 환경에 맞게 작성해주고 push를 날려 빌드 상태를 확인한다.
+<img width="886" alt="스크린샷 2023-05-15 오후 5 29 21" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/86602f6a-6475-4f1a-bc5f-261d00699f7c"> <br/>
+- 초반 몇 번은 build가 제대로 되지 않았다.
+- 이걸 해결하려고 시간이 들었기에 오류 해결과정을 작성했었지만... 리드미가 중간에 한 번 엎어져서 지금 작성하기에는 시간상 여유가 없어 이후 추가 작성할 예정이다..ㅠㅜ
+
+### 미션 결과
+- 사실 빌드가 된 이후에도 여러 문제들이 있어 연결이 잘 되지 않았다.
+- 어찌저찌 겨우겨우 성공해서 다행이었다.
+- 위에서와 마찬가지로 리드미 이슈로 인해 해결 과정을 추후에 작성하도록 하겠다.
+<img width="1026" alt="스크린샷 2023-05-15 오전 3 56 22" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/e7eecec0-0d4c-4818-939e-c49ac3db94d1">
+<img width="1016" alt="스크린샷 2023-05-15 오전 3 56 51" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/af6be930-8290-4d23-8168-98044ff569ad">
+- 아무튼 성공~
+
+### 5. 회고
+- Docker와 GitHub Action 이라는 기능들을 처음 사용해본다.
+- 배포가 익숙하지 않다보니 많이 긴장했고 어려웠지만 그만큼 보람이 있는 것 같다.
+- 자동 재배포를 언젠가 공부해 볼 예정이었는데 이렇게 좋은 환경에서 학습을 진행할 수 있어서 다행이었다.
+- 쉬운 이해를 위해 노션에 Docker와 GitHub Action에 대한 개념과 설정들을 깔끔하게 정리해주시고 레퍼런스들도 첨부해주신 운영진분들께 너무 감사했다.
+- 제일 시간과 정신을 많이 쏟은 과제였던 것 같다... 후 힘들었당..
+- 다음 과제도 화이팅!!!!
