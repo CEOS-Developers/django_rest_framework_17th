@@ -32,7 +32,6 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['0.0.0.0', '.hs-ceos.shop']
 
-
 # Application definition
 
 INSTALLED_APPS = [
