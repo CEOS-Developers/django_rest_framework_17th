@@ -471,3 +471,169 @@ JWT 없이 보냈으니 자격 인증 데이터가 없다는 응답이 오는게
 ![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/ee5954b1-db9b-4c8a-9080-35adde77457e)  
 [출처](https://velog.io/@kdh92417/Nginx%EC%99%80-Django-EC2%EC%97%90-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0-feat.-RDS-%EC%83%9D%EC%84%B1-%EB%B0%8F-%EC%97%B0%EA%B2%B0)  
 그래도 이번 기회를 통해 배포 아키텍쳐와 처음 써보는 Github Actions에 대해 공부해봐서 매우매우 유익했다..  
+
+---
+## [7주차 - AWS : https 인증]  
+저 혼자 주차를 앞서나가네요.. (~~과제가 없던 중간고사 기간 주차를 빼먹었나봐요~~) 혼란을 드린다면 죄송합니다..ㅎㅎ  
+
+
+## 💙개념부터 알아보자💙  
+### HTTPS와 SSL  
+`HTTPS`는 보안이 강화된 HTTP다. HTTP는 암호화되지 않은 방법으로 데이터를 전송하기 때문에 서버와 클라이언트가 주고 받는 메시지(Ex. 로그인할 때 비밀번호)를 감청하는 것이 매우 쉽다.  
+`SSL 인증서`는 클라이언트와 서버간의 통신을 제3자가 보증해주는 전자화된 문서다. 이를 통해 통신 내용이 공격자에게 노출되는 것을 막을 수 있고, 클라이언트가 접속하려는 서버가 신뢰 할 수 있는 서버인지를 판단할 수 있다.  
+따라서 정상적인 서비스라면 HTTPS와 SSL은 선택이 아닌 **필수**다.  
+
+
+보통 서비스가 소규모라면, 1대의 서버에 Nginx 를 설치하고 Let's Encrypt 를 설치해서 SSL을 등록한다.  
+다만 이럴 경우 트래픽이 늘어 로드밸런서 + 여러 서버 구성으로 확장하기가 쉽지 않다.  
+그래서 우리는 ACM(AWS Certificate Manager) + Route 53 + ALB(Application Load Balancer) 를 사용할 것이다.  
+
+### ALB(Application Load Balancer)  
+ALB를 이용한 SSL 동작 과정은 이렇다.  
+
+1) 서버로 request 가 들어오면 load balancer는 요청이 https(port 443) 요청인지 확인한다.  
+2) 만약 http(port 80) 요청이면 load balancer 가 이 요청을 https 로 redirection 한다.  
+https 요청이면 load balancer 가 SSL session 의 종단점 역할을 대신해 요청을 decryption 해 target group 의 80 번 포트로 요청을 forwarding 한다.  
+
+
+이렇게 구성 하면 ec2 인스턴스에서 실행 중인 server가 ssl decryption 을 수행 하지 않아도 되니 조금더 가벼워 질수 있다. (내 서버의 짐을 줄여 준다.)  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/e4c94d49-c9ec-4034-a0d1-a6dda8a9718a)  
+
+### Amazon Certificate Manager  
+AWS에서 제공하는 SSL/TLS 인증서 관리 시스템  
+
+### Route 53  
+AWS에서 제공하는 DNS임. 도메인 네임 시스템(DNS)은 사람이 읽을 수 있는 도메인 이름(예: www.amazon.com)을 머신이 읽을 수 있는 IP 주소(예: 192.0.2.44)로 변환해주는 는 시스템  
+
+### ELB(ALB)의 구성 요소  
+ELB는 외부의 요청을 받아들이는 리스너(Listener)와 요청을 분산/전달할 리소스의 집합인 대상 그룹(Target Group)으로 구성된다. ELB는 다수의 리스너와 대상 그룹을 거느릴 수 있다.  
+
+
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/07253625-8cce-45db-ab56-ccf1a90fa881)  
+
+### 배포 점검 사항  
+`DEBUG`  
+운영서버에서는 절대로 디버깅 모드를 사용하지 않는다.  
+```  
+DEBUG = False
+```  
+
+
+`ALLOWED_HOSTS`  
+디버깅 모드에서 ALLOWED_HOSTS 변수가 빈 리스트일 경우 ['localhost', '127.0.0.1', '[::1]'] 의미가 된다. 즉, 로컬 호스트에서만 접속이 가능하다.  
+디버깅 모드를 끄면 일체 접속이 허용되지 않고 아래와 같이 명시적으로 지정한 호스트에만 접속할 수 있다.  
+```  
+ALLOWED_HOSTS = ['example.com', 'www.example.com', 'localhost', ]
+```  
+
+---
+## 💙AWS를 이용한 HTTPS 적용💙  
+### 1️⃣ SSL 인증  
+1) 가비아에서 hyejun.store 도메인을 샀다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/2b25c87e-f962-46ca-8ad8-b25df06e1790)  
+
+
+2) ACM에서 내 도메인에 대한 SSL 인증서를 받았다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/577d7e29-aff1-4a05-845f-73c58d567176)  
+
+
+3) Route 53에 hyejun.store 에 대한 호스팅 영역 생성을 해주고, 다시 ACM으로 돌아가서 'Route 53 에서 레코드 생성' 눌러주면 된다.  
+
+
+4) 가비아에 들어가서 네임서버를 AWS로 이관해줘야 한다. 빨간 영역의 네임서버 4개를 모두 추가해준다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/94748433-1315-470f-aff5-ffebeef5a86f)  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/da175281-32ee-491c-993b-9691b3a3d097)  
+
+
+5) 인증서 발급 완료!  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/63d15f7a-4c44-404e-b34a-eb6840d2ceb4)  
+
+
+### 2️⃣ 로드밸런서(ALB) 설정  
+1) 대상 그룹을 만든다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/daef24d5-9a04-4600-ac47-8f27e7f3d108)  
+
+
+2) 로드밸런서를 생성하고, 방금 만든 대상 그룹과 그에 대한 리스너 2개 (HTTP:80, HTTPS:443)를 추가해준다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/2c356a90-814c-408f-bee2-c64d5bf8a13a)  
+
+
+3) 아까 발급한 SSL 인증서도 추가해준다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/ba35009c-3c12-48ba-bfd7-e7b0950149f4)  
+
+
+4) HTTP → HTTPS 리다이렉션 설정 추가하기  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/040b946f-188c-4c6b-a299-754aa74dc853)
+
+
+### 3️⃣ 로드밸런서를 Route 53의 도메인의 레코드에 등록  
+루트, www 에 대한 A레코드를 각각 생성했다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/f6995231-e52c-4168-a1ff-87f01bff0ac3)  
+
+
+### 4️⃣ ALB 타겟 그룹 Health Check 수정  
+나는 루트 URL에 대해 아무것도 만들어놓지 않아서, 접속시 404 에러가 뜨기 때문에 Health Check Path가 루트(/)로 되어있고 Success Code가 200으로 되어있다면 Unhealthy로 뜰 수 밖에 없다.  
+
+그래서 타겟 그룹으로 들어가서 Health Check Path를 바꿔주고 해당 URL로 접속하면 무조건 HTTP 200 코드를 주는 테스트용 API를 만들어놨다.  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/7dc7db46-8717-4172-b321-e57c28cfaad3)  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/cdd3d81f-09d6-4620-bc90-ec1d7830d89e)  
+
+
+
+
+
+
+### 5️⃣ 결과 확인  
+브라우저에 `http://hyejun.store`로 접속해도 `https://hyejun.store`로 잘 리다이렉션 된다🤗  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/d38a68df-a172-4167-923c-dfcd9d98fff9)  
+
+
+Postman도 잘된다👍  
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/47f1fcb4-40e4-4ab8-ae85-78472e54c2bf)  
+
+
+---
+## 🥲에러 해결 과정🥲  
+에러 해결하는데 좀 많은 시간을 쓴거 같다ㅎㅎ  
+
+
+HTTPS 적용이 안되는건 `ALLOWED_HOSTS=*`로 해결했고,  
+저번에 까먹은 migrate을 하려는데 `env` 파일 관련 에러도 나고.. `Unknown MySQL server` 에러도 났다.  
+
+
+나는 분명 `env.prod`에 RDS 설정을 다 제대로 해줬고..  
+`entrypoint.prod.sh`에 이것도 추가해보고..  
+```  
+echo "Apply database migrations"
+python manage.py makemigrations
+python manage.py migrate
+```  
+
+
+`Dockerfile.prod`에 `jpeg-dev zlib-dev` 도 추가해보고..  
+
+RDS 마스터 비밀번호를 아예 바꿔서 다시 설정해줘도..  
+
+
+도저히 RDS에 migrate가 안되더라🥲 그래도 혹시나 하는 마음에 MySQL Workbench로 RDS에 접속해봤는데 테이블이 하나도 안만들어졌다.  
+
+
+근데... 내가 `env.prod`에서 DB 이름, 마스터 유저 이름, 비밀번호, 포트, ALLOWED_HOSTS 다 계속 확인했는데 하나 확인 안한게 있더라...ㅎ  
+알고보니까 맨 윗줄에 떡하니 있는 RDS 엔드포인트에 **다른 RDS**가 들어가 있었다...ㅎ  
+
+
+바꿔주니까 바로 되더라ㅎㅎㅎㅎㅎ  
+
+물론 아직 일부 테이블만 migrate되서 해결해야하는 상황이긴 한데 정말 너무너무 어이없었다ㅎ 앞으로는 에러가 나면 너무 당연하다고 생각되는 것부터 확인하자..  
+
+
+---
+##  💙회고💙  
+이전에는 Nginx에서 직접 SSL인증서를 발급받는 것밖에 안해봐서 AWS가 SSL인증을 이렇게 지원하는지 전혀 몰랐다.. 앞으로 잘 써먹어야겠다  
+서브도메인에 대해서도 SSL인증을 하느라 골머리를 앓은적이 있는데 역시 아마존 최고당  
+그래서 이번 과제도 넘넘 유익했다  
+다음부턴 RDS 엔트포인트 두번 세번 확인할거다ㅎㅎ  
+벌써 기말고사라니 😵😵 그래두 다들 화이팅!  
+
+
+![image](https://github.com/shj718/django_rest_framework_17th/assets/90256209/2d4f7f8a-da80-4647-a4b4-e2e605bf69eb)  
