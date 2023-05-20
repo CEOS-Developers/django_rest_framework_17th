@@ -118,3 +118,10 @@ class HealthCheck(APIView):
             "message": "Instance is healthy!"
         }, status=status.HTTP_200_OK)
         return response
+
+
+class SchoolListAPIView(APIView):
+    def get(self, request, format=None):
+        schools = School.objects.filter(status='A')
+        serializer = SchoolSerializer(schools, many=True)
+        return Response(serializer.data)
