@@ -578,3 +578,26 @@ sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --buil
 - 쉬운 이해를 위해 노션에 Docker와 GitHub Action에 대한 개념과 설정들을 깔끔하게 정리해주시고 레퍼런스들도 첨부해주신 운영진분들께 너무 감사했다.
 - 제일 시간과 정신을 많이 쏟은 과제였던 것 같다... 후 힘들었당..
 - 다음 과제도 화이팅!!!!
+
+## [6주차] AWS : EC2, RDS & Docker & Github Action
+### (1) HTTP
+- 클라이언트와 서버사이에서 동작하는 애플리케이션 레벨의 네트워크 통신 프로토콜
+
+### (2) HTTPS
+- `HTTP`에 Secure가 추가
+-  `SSL(Secure Socket Layer)`이라는 프로토콜을 사용해 주고 받는 정보를 암호화한 형태
+
+### (3) Route 53
+- AWS에서 제공하는 DNS
+### (4) ALB
+- **애플리케이션 로드 밸런서(ALB; Application Load Balancer)**: AWS에서 제공하는 로드 밸런서로, HTTP/HTTPS 요청을 연결된 서버로 분배하여 트래픽을 균형있게 처리하도록 도와준다
+
+### 미션.
+- 현재 로드밸런서에서의 이슈로 인해 해결이 좀 더 필요할 것 같습니다...ㅠ
+- 해결이 되는대로 리드미에 추가하여 올리도록 하겠습니다!
+
+<img width="923" alt="스크린샷 2023-05-21 오전 12 28 17" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/7bd2539c-e384-4ed4-8f6d-d61bdee0f7d0">
+
+<img width="974" alt="스크린샷 2023-05-21 오전 12 27 54" src="https://github.com/ImTakGyun/django_rest_framework_17th/assets/98458302/1099157d-9dbc-40b3-8576-046063ea16c7">
+
+- 도커가 잘 실행되고 80번 포트도 열려있지만... 뭐가 문제인지...
