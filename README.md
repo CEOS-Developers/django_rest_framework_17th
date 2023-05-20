@@ -1242,4 +1242,201 @@ EC2, RDS, GitHub Actions를 통한 서버 배포와 CD는 이전 프로젝트 �
 
 
 <br>
+<br>
+
+# CEOS 백엔드 스터디 - 6주차
+
+> 어느덧 기말고사 전 마지막 미션이다 ~~시간 참 빠르넹ㅠ~~ 
+이번 미션은 저번 주에 배포한 서버에 HTTPS를 적용하는 것이다
+
+<br>
+
+## 1. HTTPS란?
+### (1) HTTP
+
+`HTTPS`를 살펴보기 전에 먼저 `HTTP`가 무엇인지 알아보자
+[HTTP](https://velog.io/@haen/Server-HTTP%EB%9E%80)는 클라이언트와 서버사이에서 데이터를 애플리케이션 레벨의 네트워크 통신 프로토콜이다 
+
+`HTTP`의 단점은 주고 받는 데이터가 암호화되지 않기 때문에 보안에 취약하다는 것이다
+이러한 문제를 해결하기 위해 기존의 `HTTP`를 암호화한 버전인 `HTTPS`가 탄생하였다
+
+<br>
+
+### (2) HTTPS
+
+`HTTPS`는 `Hypertext Transfer Protocol Secure`의 약자로 `HTTP`에 Secure가 추가된 것이다
+
+`HTTPS`는 `SSL(Secure Socket Layer)`이라는 프로토콜을 사용해 주고 받는 정보를 암호화 했는데, 이후 `SSL`은 `TLS (Transport Layer Security)`로 발전되어 현재는 SSL/TLS라는 단어를 혼용해서 사용하고 있다고 한다
+
+<br> 
+
+## 2. 서비스 아키텍처
+
+HTTPS 인증을 위해 AWS Route 53과 ALB를 사용할 것이다 무엇인지 간단히 알아보자!
+
+### (1) Route 53
+> **DNS(Domain Name Service)**: 사용자가 브라우저에 검색할 수 있도록 도메인 이름과 IP주소를 매핑해 놓은 시스템
+** Route 53**: AWS에서 제공하는 DNS
+
+사용자가 브라우저 주소 검색창에 도메인을 검색하면 브라우저가 DNS에 도메인 이름을 검색하여 IP 주소를 가져와 통신한다
+
+
+<img src="https://velog.velcdn.com/images/haen/post/e06d9e03-d047-46a7-ac19-4ac79c22a500/image.png" width="70%"></img>
+
+Route 53을 이용해 도메인 이름을 현재 애플리케이션이 실행 중인 EC2 인스턴스의 IP에 매핑할 수 있고,
+사용자가 도메인 이름으로 접속할 때마다 애플리케이션이 실행 중인 EC2로 라우팅 된다
+
+<br>
+
+### (2) ALB
+
+> **애플리케이션 로드 밸런서(ALB; Application Load Balancer)**: AWS에서 제공하는 로드 밸런서로, HTTP/HTTPS 요청을 연결된 서버로 분배하여 트래픽을 균형있게 처리하도록 도와준다
+
+<img src="https://velog.velcdn.com/images/haen/post/e07a0a07-f550-4e60-a183-253ed341842a/image.png" width="70%"></img>
+
+위의 그림처럼 두개의 EC2 인스턴스가 공유하고 있는 IP가 있고, 로드 밸런서는 IP를 공유하고 있는 서버에게 트래픽을 분배한다
+
+- **타깃 그룹(Target Group)**: 애플리케이션 로드 밸런서에 연결되어 있는 인스턴스들
+
+<br>
+
+이외의 자세한 내용은 [여기](https://velog.io/@haen/Server-%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-Service-Architecture)에 정리해놓았다
+
+<br>
+
+### (3) 그래서 우리의 서버에는 어떻게 적용되나요?
+
+![](https://velog.velcdn.com/images/haen/post/5256b91a-c373-4951-ab1d-38aa7e5315fc/image.png)
+
+
+우리가 이전에 배포한 서버는 80포트로 요청이 오면 NGINX가 받아 Django 서버의 8000포트로 연결해준다
+
+
+![](https://velog.velcdn.com/images/haen/post/7b2ec518-3b6b-4630-ba7d-8e01f5e4878b/image.png)
+
+이때 HTTPS 요청(443)과 HTTP 요청(80)이 서버로 전달될 경우,
+ALB단에서 HTTP 요청을 HTTPS 요청으로 리다이렉트 하고, SSL/TLS 인증서를 추가하는 부분을 추가하면 HTTPS 적용을 할 수 있다
+
+이때 우리는 구축한 서버가 하나기 때문에 ALB의 역할은 HTTPS 인증서 적용 및 HTTP 요청을 HTTPS로 리다이렉트 시키는 것이다!
+
+**이미지 출처: 상훈이**
+
+<br>
+
+## 3. 직접 적용해보기
+
+
+### (1) 도메인 구매 및 route 53 등록
+
+가비아에서 `hs-ceos.shop` 도메인을 구매하고
+![](https://velog.velcdn.com/images/haen/post/546833a4-e403-446c-ab01-6dcdaa9a9248/image.png)
+
+route 53에 구매한 도메인을 등록하고 가비아에서 네임서버도 등록해주었다
+![](https://velog.velcdn.com/images/haen/post/fc7aabb1-8f2d-4dbd-a3c7-44f602740c0a/image.png)
+
+
+<br>
+
+### (2) ACM 인증서 발급
+![](https://velog.velcdn.com/images/haen/post/84eb479e-5a92-43e2-99ac-06ddc050e454/image.png)
+
+<br>
+
+### (3) 타겟그룹과 로드밸런서 생성
+
+![](https://velog.velcdn.com/images/haen/post/ae78810c-164d-4538-90f4-b5addd272cbe/image.png)
+
+타겟그룹은 Nignx가 요청을 80포트로 받기 때문에 80으로 설정!
+
+![](https://velog.velcdn.com/images/haen/post/bc8fcc56-a262-4cbb-9d30-b468d0ed573e/image.png)
+![](https://velog.velcdn.com/images/haen/post/6882377b-6bc2-4c62-ac1f-87d4ad6dd065/image.png)
+
+로드밸런서의 리스너는 80포트와 443포트를 열어준다
+
+![](https://velog.velcdn.com/images/haen/post/2a65c120-3518-485d-bba5-d4a93bd4dba2/image.png)
+
+HTTP 요청을 HTTPS 요청으로 리다이렉트 시켜주는 설정도 추가!
+
+<br>
+
+### (4) Nginx 설정
+
+```
+# nginx.conf
+
+if ($http_x_forwarded_proto != 'https') {
+	return 301 https://$host$request_uri;
+}
+```
+
+ALB에서 먼저 HTTP 요청을 HTTPS로 리다이렉트 시켜주지만 혹시 모르니
+nginx.conf에 리다이렉트 로직을 추가해준다
+
+<br>
+
+### (5) Route 53 도메인 레코드에 ALB 등록
+
+![](https://velog.velcdn.com/images/haen/post/9239ccc8-ae3c-458a-a6c9-8d6af7fde414/image.png)
+
+짜잔~~
+
+
+### (6) EC2에 인바운드 규칙 추가
+
+EC2를 생성할 때 인바운드 규칙에 HTTPS 443포트를 미리 등록해놓았따
+**HTTPS 적용은 필수니까...~~!!!**
+
+<br>
+
+### (7) API 테스트
+![](https://velog.velcdn.com/images/haen/post/f519a647-29df-47ff-9da4-30311a2ca559/image.png)
+
+끝!
+
+<br>
+
+## 4. 겪은 오류
+
+### (1) 타겟 그룹 Health Checks -> Unhealthy
+
+Health check settings대로 타겟그룹의 Health check를 진행하는데,
+따로 설정하지 않으면 `'/'`로 HTTP 요청을 보내 체크를 한다
+이때 HTTP 응답 코드가 200이면 Healthy 상태가 된다
+Unhealthy가 뜬다고 문제가 생기는 것은 아니다 하지만 마음이 조금 불편하여^^...
+
+![](https://velog.velcdn.com/images/haen/post/2594719e-c69f-4772-8f2a-e68fe44fcfe5/image.png)
+
+이렇게 사진처럼 Success codes에 301을 추가하여 healthy가 되도록 하였다
+이때 301인 이유는 위에서 HTTP 요청이 HTTPS 요청으로 리다이렉트 되면서 응답코드가 301로 되게 설정해놓았기 때문이다
+
+
+<br>
+
+### (2) Bad Request 400
+
+사실 과금될까봐 무서워서 저번에 구매해놓고 이미 Route 53에 등록해놓은 도메인에 ALB만 새로 만들어 바꾸어 보았는데
+자꾸 `Bad Request 400` 오류가 떴다
+
+그래서 설정이 잘못됐나 싶어서 도메인을 새로 사서 과제를 다시 했다
+그래도 400 뜨길래... 한참 헤매다 현우 오빠가 도와주었다
+
+docker에 접속하여 오류 로그를 봤는데 
+`error:django.security.disallowedhost:invalid http_host header`
+라면서 도메인을 ALLOWED_HOSTS에 등록하라고 했다
+
+그래서 등록했는데도 안 됐고, *로 설정했는데도 실패
+env.prod의 DJANGO_ALLOWED_HOSTS에 도메인을 추가해도 실패ㅎㅎ
+
+다행히 현우 오빠가 도와주어서 해결했다
+env.prod의 DJANGO_ALLOWED_HOSTS를 *로 설정^^...
+하지만 와일드 카드로 모든 접속을 허용해놓은 거기 때문에 찝찝하긴 하다
+이거 정확하게 어떻게 설정해야 하는지 아시는 분 ㅠㅠ
+
+<br>
+
+## 5. 회고
+
+위의 400 오류 해결하는 거 제외하고는 수월하게 진행했다
+처음 접하는 개념이면 어려웠을텐데 저번 프로젝트를 하면서 공부한 내용이라 이해가 잘 되었다
+다들 기말고사 끝나고 만나요~~!
 
