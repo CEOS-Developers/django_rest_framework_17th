@@ -503,7 +503,7 @@ https 요청이면 load balancer 가 SSL session 의 종단점 역할을 대신�
 AWS에서 제공하는 SSL/TLS 인증서 관리 시스템  
 
 ### Route 53  
-AWS에서 제공하는 DNS임. 도메인 네임 시스템(DNS)은 사람이 읽을 수 있는 도메인 이름(예: www.amazon.com)을 머신이 읽을 수 있는 IP 주소(예: 192.0.2.44)로 변환해주는 는 시스템  
+AWS에서 제공하는 DNS임. 도메인 네임 시스템(DNS)은 사람이 읽을 수 있는 도메인 이름(예: www.amazon.com)을 머신이 읽을 수 있는 IP 주소(예: 192.0.2.44)로 변환해주는 시스템  
 
 ### ELB(ALB)의 구성 요소  
 ELB는 외부의 요청을 받아들이는 리스너(Listener)와 요청을 분산/전달할 리소스의 집합인 대상 그룹(Target Group)으로 구성된다. ELB는 다수의 리스너와 대상 그룹을 거느릴 수 있다.  
