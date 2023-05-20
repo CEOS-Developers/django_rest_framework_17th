@@ -110,3 +110,11 @@ class LogoutAPIView(APIView):
         }, status=status.HTTP_202_ACCEPTED)
         response.delete_cookie('refresh')
         return response
+
+
+class HealthCheck(APIView):
+    def get(self, request, format=None):
+        response = Response({
+            "message": "Instance is healthy!"
+        }, status=status.HTTP_200_OK)
+        return response
