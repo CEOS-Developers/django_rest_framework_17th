@@ -85,23 +85,23 @@ class CommentDetail(APIView) :
         comments.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class Login(APIView):
+#class Login(APIView):
 
-    def post(self, request):
-        user = authenticate(username=request.data.get("username"), password=request.data.get("password"))
+ #   def post(self, request):
+ #       user = authenticate(username=request.data.get("username"), password=request.data.get("password"))
 
-        if user is not None:
-            token = TokenObtainPairSerializer.get_token(user)
-            access_token = token.access_token
-            res = Response(
-                {
-                    "message": "login success",
-                    "token": str(token.access_token)
-                },
-                status=status.HTTP_200_OK,
-            )
+        #if user is not None:
+        #    token = TokenObtainPairSerializer.get_token(user)
+        #    access_token = token.access_token
+        #    res = Response(
+        #        {
+        #            "message": "login success",
+        #            "token": str(token.access_token)
+        #        },
+        #        status=status.HTTP_200_OK,
+        #    )
 
-            res.set_cookie("access", access_token, httponly=True)
-            return res
-        else:
-            return HttpResponse("target failed")
+         #   res.set_cookie("access", access_token, httponly=True)
+         #   return res
+        #else:
+        #    return HttpResponse("target failed")

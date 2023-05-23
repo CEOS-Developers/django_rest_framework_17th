@@ -132,7 +132,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+django_rest_framework_17th/.env
 .venv
 env/
 venv/

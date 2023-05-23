@@ -22,16 +22,16 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR, 'django_rest_framework_17th/.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY=env('DJANGO_SECRET_KEY')
 #DEBUG = env('DEBUG')
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG=True
+ALLOWED_HOSTS=['*']
 
 
 # Application definition
@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'timetables',
     'tag',
     'rest_framework',
-    'accounts.apps.MemberConfig',
+    #'accounts.apps.MemberConfig',
     'rest_framework_simplejwt',
 ]
 
@@ -62,6 +62,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {'charset': 'utf8mb4'},
+    }
+
 }
 
 
@@ -170,4 +176,11 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+DATABASES = {
+    'default': {
+        'ENGINE':'django.db.backends.mysql',
+        'OPTIONS': {'charset': 'utf8mb4'},
+    }
 }
