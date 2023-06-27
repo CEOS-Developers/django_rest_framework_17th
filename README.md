@@ -1,79 +1,77 @@
-# CEOS 17기 백엔드 스터디
+# django_rest_framework_17th
+CEOS 17th Backend DRF Study
 
-------
-## 오류 해결과정(해결은 못했지만...)
-
-```
-#0 47.65   ERROR: Failed building wheel for Pillow
-#0 47.65   Running setup.py clean for Pillow
-#0 48.12 Failed to build backports.zoneinfo Pillow
-#0 48.12 ERROR: Could not build wheels for backports.zoneinfo which use PEP 517 and cannot be installed directly
-#0 48.15 WARNING: You are using pip version 20.1.1; however, version 23.1.2 is available.
-#0 48.15 You should consider upgrading via the '/usr/local/bin/python -m pip install --upgrade pip' command.
-```
-- 내가 설치한 라이브러리들이랑 실행하기 위한 장치들의 버전이 낮아서 생기는 문제들 같다...
-- 계속해서 업데이트를 진행해주었는데 계속 같은 오류가 떠서 문제 였는데 알고보니까 Dockerfile의 컨테이너를 실행할 때 버전 업그레이드를 해줘야 하는 문제였다.
-```Dockerfile
-RUN pip install --upgrade pip setuptools wheel
-```
 ----
-- 계속 오류가 뜨는데 용량과 windows와 mac의 차이로 생기는 오류 같아서...인터넷에 나온 방식으로 바꿔봤다.
-```Dockerfile
-#FROM python:3.8.3-alpine
-FROM python:3.8.3-slim-buster
 
-#RUN apk add --no-cache mariadb-connector-c-dev
-#RUN apk update && apk add python3 python3-dev mariadb-dev build-base && pip3 install mysqlclient && apk del python3-dev mariadb-dev build-base
-```
-- 또 apk는 mac용(??)이라고 해서 저부분도 주석처리했다.
+# 오류 해결
+- 지난 과제를 처음부터 다시 했다. 이전에 했던 자료들 참고해서 다시 해봤음.
+- 오류에는 두 가지 원인이 있었다.
+    1. Django 버전 3.*
+    2. Pillow 라이브러리 삭제
+- Pillow는 이미지 처리를 위해 설치했었는데...어짜피 요새 이미지 파일은 url을 받아오는 식으로 처리한다길래 textfield로 바꿔주고 uninstall 해줬다.
+- 그리고 설치한 적 없는 backports~어쩌고가 계속 오류를 일으켰는데..없어도 문제 없길래 삭제!
+- 드디어 Dockerfile이 잘돌아간다....
+- ![성공.png](성공.png)
+- 잘돌아가는 걸 확인했으니 github action과 EC2, RDS 인스턴스를 생성하고 .env.prod 작성...지난주에 해둠.
+- github action에 연결해주었다. deploy.yml의 push branch가 dev로 되어있길래 dev branch를 새로 만들고 거기에다가 작업물을 push 해주었다.
+- ![github action.png](github action.png)
+- 그리고 django_admin_log table이 이미 존재한다 어쩌구 오류도 꽤 애먹었는데...이건 이전의 docker volumns다 삭제해버림
+### 새로운 오류(ㅜㅜ)
+- github action에서는 build가 잘 됐는데 서버에 접속은 안된다...
+- 응답시간이 오래 걸리는 경우  ->  이건 내가 보안그룹 인바인드 규칙에서 포트번호 설정을 안해줬다..
+- default로 생성되는 보안그룹은 개발자 포트인 22만 연결되어있음.
+- 80번 추가하고...혹시 몰라서 모든 TCP도 추가해줬다.
+- 또 응답시간이 오래걸릴때는...퍼블릭 DNS 주소가 바뀔때..계속 바뀌니까 해결하자
 ---
-- mysqlclinet가 설치가 안된다.
-```
-ERROR: Could not find a version that satisfies the requirement libmysqlclient-dev (from versions: none)
-ERROR: No matching distribution found for libmysqlclient-dev
-```
-- 이를 해결하기 위한 방식으로 sudo 명령어를 Dockerfile에 입력해주어야 하는데, window에서는 sudo 명령어를 사용하려면 따로 처리를 해주어야 한다....
-- 어짜피 컨테이너에서 실행만 해주면 되니까 Dockerfile에 sudo명령어를 실행시킬 수 있도록 작성함.
-```Dockerfile
-RUN apt-get update && apt-get install -y sudo
-RUN adduser --disabled-password --gecos "" user  \
-    && echo 'user:user' | chpasswd \
-    && adduser user sudo \
-    && echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-RUN apt-get -y install python3-dev default-libmysqlclient-dev build-essential
+- 이번에는 연결 거부!!
+- 진짜 오류를 모르겠어서 도움요청...
+- EC2연결을 위해 https://newbiecs.tistory.com/211 를 참고하여 로컬에서 연결해주었다.
+- 근데 EC2인스턴스 -> 연결 누르면 바로 연결됨...^^
+- 여기서 여러 오류원인들을 확인할 수 있다.
+    - netstat -> 연결된 port 확인...근데 사실 봐도 잘 모르겠당
+    - sudo docker ps -> container 확인
+- docker build가 제대로 되지 않았다!!! 바로 **sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build**
+- 근데 이렇게 하면 502 nginx error가 뜬다..^^
+- 그리고 연결이 되니까 github action에서 build가 실패함 -> 이유는 requirements.txt에 gunicorn이 없는거...
+- pip install gunicorn 후 다시 push
+- .env.prod의 HOST=*로 해서 탄력적 ip로 접속 가능하게 했다.
+- 드디어 성공~~
+- ![성공!.png](성공!.png)
+---
+## 참고 사이트
+- [netstat 명령어](https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=ncloud24&logNo=221388026417)
+- [UTF-8](https://yeonyeon.tistory.com/167)
+- 이거 설정 안하면 한글 입력이 안된다. 나중에 꼭 수정하기
+---
+# 본격적인 6주차 과제!!
+1️⃣ 도메인 구입 - 가비아 + 2️⃣ Certificate Manager
+- 결제가 귀찮아서 무료 사이트들을 이용하려 했는데...요청이 너무 오래걸려서 포기하고 가비아에서 샀다.
+- [무료사이트](https://xn--220b31d95hq8o.xn--3e0b707e/) -> 그래도 가입해뒀으니까 잊지 않기...
+- **ym-ceos.store** 할인하는 걸루 샀다!
+- [가비아연결](https://developer-ping9.tistory.com/320)
+- 여기서 하라는대로 네임서버 등록까지 완료
+- 레코드 유형 **A~~** 선택 후 추가해주어야 한다.
+- 이거 못보고 지나쳐서 시간 버렸음.
 
-RUN sudo apt-get install python3-dev default-libmysqlclient-dev build-essential
-```
-- sudo 명령어 처리 후 mysqlclient 설치하기.
-- 또  뭐 계속하겠냐는 질문에 자동으로 y처리 되도록 설정함.
-- 근데 너무 오래걸린다...저 부분에서만 130s임 이거 맞나..?
----
-- No module named 'environ' 에러 -> pip install environ 후 requirements.txt에도 추가함.
--  raise ValueError, "No frame marked with %s." % fname
-- pip install environ이 안된다함. 대신 pip install django-environ으로 바꿔줌.
----
-- django.db.utils.OperationalError: (1049, Unknown database CEOS_DB) 오류 -> docker-compose의 database name을 .env파일과 맞춰야하는 줄 알았는데...아닌가보다...mysql로 해줬다.
-- django.db.utils.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: YES)") -> password는 내가 설정한 걸로 해주기
-- django.db.utils.OperationalError: (1050, "Table 'django_admin_log' already exists") 
-- 여기서 막혔다...모든 database의 django_admin_log table을 삭제했는데 우째서 계속 존재한다고 뜰까...
-- 오류가 너무 많아서 처음부터 다시 해야 할 듯 하다...
----
-## AWS 배포
+3️⃣ Elastic Load Balancer 등록
+- 여기서 중요한 점...SSL/TLS 등록하는 부분이 없어서 당황했는데 port 번호 옆 HTTPS로 바꿔주기!!
+- AWS...너무 보기 불편해ㅜㅜ
 
-![rds.png](rds.png)
+4️⃣ 80번 포트로 들어오는 요청은 Redirect, 443번 포트로 들어오는 요청을 인스턴스로 연결해준다.
+- 완료!!
+- nginx 리다이렉션 로직 추가 -> 하고 싶었는데...오류가 너무 무서워서 못하는 중임 누군가 멋지게 성공하겠지..?
 
-- 생성은 과제를 따라 해주었다.
-- 하다가 주의할 점...템플릿 프리티어로 설정하기...기본 설정이 프로덕션이였는데 못보고 지나칠뻔함
+5️⃣ 등록한 로드밸런서를 AWS Route 53의 도메인의 레코드에 등록한다.
+- 기존에 만들어준 레코드를 수정하기!
+- 별칭 on 으로 해야지 ALB등록 가능
 
----
-### MFA 설정
-- 오류가 너무 많아서 AWS 연결 시도도 못해봤다...
-- 대신 보안을 위한 MFA를 설정해주었다. 미리 보안 예방
-- MFA는 IAM에서 추가할 수 있다. IAM은 역할에 따른 사용자를 구분하고 설정하는 걸로만..간단하게 알고 있어는데 루트사용자에 대한 보안 관리도 하는 줄은 몰랐다.
-![MFA.png](MFA.png)
-- **Authenticator** 앱을 사용해 로그인할 때마다 계속 갱신되는 코드를 입력한 후 계정에 접속할 수 있다.
----
-## 회고
-- 오류가 너무 많이 나서...오류 하나를 해결하면 새로운 오류가 2개가 나온다...
-- 계속해서 오류를 고치다가 처음 셋팅에서 너무 많이 벗어나고, 끝이 없어보여 아예 처음부터 다시 해봐야 할 듯하다..ㅜㅜ
-- 너무 아쉬움이 많은 과제입니다...
+6️⃣ ec2 인바운드 규칙 443 추가
+- ![인바운드.png](인바운드.png)
+- 규칙 추가함.
+- 화나서 이것저것 추가했다. 나중에 정리해야지~~
+---g
+## 과제
+- RDS문제였다. 현우오빠의 도움으로 해결했습니다!
+- 인스턴스에서 연결하고 여러 에러나 서버를 확인하는 법을 배웠습니다. 
+![화이팅.png](화이팅.png)
+ 
